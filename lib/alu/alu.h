@@ -6,11 +6,11 @@
 
 namespace riscv_emu {
 
-  namespace constants {
+  namespace alu::constants {
 
     constexpr uint32_t kMaxShiftMask = 0b11111;
 
-  }  // namespace constants
+  }  // namespace alu::constants
 
 enum class AluOp {
   kAdd,

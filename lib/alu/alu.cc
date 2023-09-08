@@ -32,7 +32,7 @@ namespace riscv_emu {
 
     absl::StatusOr<logic::Wire> Sll(const logic::Wire val1, const logic::Wire val2, bool* hasOverflow) {
       // Extra protection here: in case `val2` (rs2 & 0b11111) > max shift amount.
-      if ((val2.GetUnsigned() & (~constants::kMaxShiftMask)) > 0) {
+      if ((val2.GetUnsigned() & (~alu::constants::kMaxShiftMask)) > 0) {
         return absl::FailedPreconditionError("Instruction attempted to bit shift > 31 bits");
       }
       const uint32_t result = val1.GetUnsigned() << val2.GetUnsigned();
@@ -41,7 +41,7 @@ namespace riscv_emu {
 
     absl::StatusOr<logic::Wire> Sra(const logic::Wire val1, const logic::Wire val2, bool* hasOverflow) {
       // Extra protection here: in case `val2` (rs2 & 0b11111) > max shift amount.
-      if ((val2.GetUnsigned() & (~constants::kMaxShiftMask)) > 0) {
+      if ((val2.GetUnsigned() & (~alu::constants::kMaxShiftMask)) > 0) {
         return absl::FailedPreconditionError("Instruction attempted to bit shift > 31 bits");
       }
       int32_t result = 0;
@@ -60,7 +60,7 @@ namespace riscv_emu {
     // TODO: Consider moving error checking elsewhere?
     absl::StatusOr<logic::Wire> Srl(const logic::Wire val1, const logic::Wire val2, bool* hasOverflow) {
       // Extra protection here: in case `val2` (rs2 & 0b11111) > max shift amount.
-      if ((val2.GetUnsigned() & (~constants::kMaxShiftMask)) > 0) {
+      if ((val2.GetUnsigned() & (~alu::constants::kMaxShiftMask)) > 0) {
         return absl::FailedPreconditionError("Instruction attempted to bit shift > 31 bits");
       }
       const uint32_t result = val1.GetUnsigned() >> val2.GetUnsigned();
