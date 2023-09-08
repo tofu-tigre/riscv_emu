@@ -1,12 +1,12 @@
-cc_binary(
-  name = "emu",
-  srcs = ["main.cc"],
+cc_library(
+  name = "alu",
+  hdrs = ["alu.h"],
+  srcs = ["alu.cc"],
+  visibility = ["//visibility:public"],
   deps = [
     "//lib/logic:wires",
-    "//lib/logic:opcodes",
     "@com_google_absl//absl/status:statusor",
     "@status_macros//:status_macros",
     "@com_github_google_glog//:glog",
-    "//lib/alu:alu",
   ],
 )

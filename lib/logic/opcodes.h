@@ -20,6 +20,6 @@ enum class Opcode : uint32_t {
   J_TYPE = 0b1101111,
 };
 
-}
+}  // namespace riscv_emu::logic
 
-#endif
+#endif  // LIB_LOGIC_OPCODES_H

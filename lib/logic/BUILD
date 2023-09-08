@@ -12,5 +12,6 @@ cc_library(
   deps = [
     ":opcodes",
     "@com_google_absl//absl/status:statusor",
+    "@status_macros//:status_macros",
   ],
 )
