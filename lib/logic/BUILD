@@ -15,3 +15,12 @@ cc_library(
     "@status_macros//:status_macros",
   ],
 )
+
+cc_library(
+  name = "register",
+  hdrs = ["register.h"],
+  visibility = ["//visibility:public"],
+  deps = [
+    ":wires",
+  ],
+)

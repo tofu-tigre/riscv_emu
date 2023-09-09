@@ -4,8 +4,10 @@ cc_library(
   srcs = ["cpu.cc"],
   visibility = ["//visibility:public"],
   deps = [
+    "//lib/logic:register",
     "//lib/logic:wires",
     "//lib/alu:alu",
+    "//lib/memory:dram",
     "@com_google_absl//absl/status:status",
     "@com_google_absl//absl/status:statusor",
     "@status_macros//:status_macros",

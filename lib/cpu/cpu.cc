@@ -1,23 +1,24 @@
 #include "cpu.h"
 #include "status_macros.h"
 #include "absl/status/statusor.h"
+#include "lib/logic/wire.h"
 
 namespace riscv_emu {
 
   namespace {
 
-    absl::StatusOr<logic::Wire> GetRegister(logic::Wire registers[32], size_t at_index) {
+    absl::StatusOr<logic::Wire> GetRegister(logic::Register registers[32], const size_t at_index) {
       if (at_index > 31) {
         return absl::OutOfRangeError("Cannot access register at index > 31");
       }
-      return registers[at_index];
+      return registers[at_index].GetOut();
     }
 
-    absl::Status SetRegister(logic::Wire registers[32], size_t at_index, logic::Wire val) {
+    absl::Status SetRegister(logic::Register registers[32], const size_t at_index, const logic::Wire val) {
       if (at_index > 31) {
         return absl::OutOfRangeError("Cannot access register at index > 31");
       }
-      registers[at_index] = val;
+      registers[at_index].SetIn(val);
     }
 
   }  // namespace

@@ -163,6 +163,22 @@ namespace riscv_emu::logic {
     return (value_.u32 & constants::kRs2Mask) >> constants::kRs2Shift;
   }
 
+  absl::StatusOr<uint32_t> Wire::GetByte(size_t at_index) {
+    if (at_index >= constants::kBytesInWord) {
+      return absl::InvalidArgumentError("Request byte at invalid index");
+    }
+    constexpr int kBitsInAByte = 8;
+    return value_.u32 & (constants::kByteMask << (at_index * kBitsInAByte));
+  }
+
+  absl::StatusOr<uint32_t> Wire::GetHalfWord(size_t at_index) {
+    if (at_index >= constants::kHalfWordsInWord) {
+      return absl::InvalidArgumentError("Request halfword at invalid index");
+    }
+    constexpr int kBitsInAHalfWord = 16;
+    return value_.u32 & (constants::kByteMask << (at_index * kBitsInAHalfWord));
+  }
+
   std::ostream& operator<<(std::ostream& os, const Wire& wire) {
     std::bitset<32> val{wire.value_.u32};
     os << "0b" << val;

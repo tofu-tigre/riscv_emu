@@ -22,6 +22,12 @@ namespace riscv_emu::logic {
     constexpr uint32_t kRs1Mask = 0b11111 << kRs1Shift;
     constexpr uint32_t kRs2Mask = 0b11111 << kRs2Shift; 
 
+    constexpr int kBytesInWord = 4;
+    constexpr uint32_t kByteMask = 0xff;
+
+    constexpr int kHalfWordsInWord = 2;
+    constexpr uint32_t kHalfWordMask = 0xffff;
+
   }  // namespace constants
 
   class Wire final {
@@ -42,6 +48,8 @@ namespace riscv_emu::logic {
     inline void SetSigned(int32_t value) { value_.i32 = value; }
     inline uint32_t GetUnsigned() const { return value_.u32; }
     inline int32_t GetSigned() const { return value_.i32; }
+    absl::StatusOr<uint32_t> GetByte(size_t at_index);
+    absl::StatusOr<uint32_t> GetHalfWord(size_t at_index);
 
     absl::StatusOr<Opcode> GetOpcode() const;
     absl::StatusOr<uint32_t> GetFunc3() const;
