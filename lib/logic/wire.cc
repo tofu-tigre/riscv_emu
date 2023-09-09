@@ -9,13 +9,13 @@ namespace riscv_emu::logic {
 
     absl::StatusOr<bool> HasFunc3(const Opcode opcode) {
       switch (opcode) {
-       case Opcode::R_TYPE:
-       case Opcode::I_TYPE:
-       case Opcode::S_TYPE:
-       case Opcode::B_TYPE:
+       case Opcode::kRType:
+       case Opcode::kIType:
+       case Opcode::kSType:
+       case Opcode::kBType:
         return true;
-       case Opcode::U_TYPE:
-       case Opcode::J_TYPE:
+       case Opcode::kUType:
+       case Opcode::kJType:
         return false;
        default:
         // Should never occur.
@@ -25,13 +25,13 @@ namespace riscv_emu::logic {
 
     absl::StatusOr<bool> HasFunc7(const Opcode opcode) {
       switch (opcode) {
-       case Opcode::R_TYPE:
+       case Opcode::kRType:
         return true;
-       case Opcode::I_TYPE:
-       case Opcode::S_TYPE:
-       case Opcode::B_TYPE:
-       case Opcode::U_TYPE:
-       case Opcode::J_TYPE:
+       case Opcode::kIType:
+       case Opcode::kSType:
+       case Opcode::kBType:
+       case Opcode::kUType:
+       case Opcode::kJType:
         return false;
        default:
         // Should never occur.
@@ -41,13 +41,13 @@ namespace riscv_emu::logic {
 
     absl::StatusOr<bool> HasRs1(const Opcode opcode) {
       switch (opcode) {
-       case Opcode::R_TYPE:
-       case Opcode::I_TYPE:
-       case Opcode::S_TYPE:
-       case Opcode::B_TYPE:
+       case Opcode::kRType:
+       case Opcode::kIType:
+       case Opcode::kSType:
+       case Opcode::kBType:
         return true;
-       case Opcode::U_TYPE:
-       case Opcode::J_TYPE:
+       case Opcode::kUType:
+       case Opcode::kJType:
         return false;
        default:
         // Should never occur.
@@ -57,13 +57,13 @@ namespace riscv_emu::logic {
 
     absl::StatusOr<bool> HasRs2(const Opcode opcode) {
       switch (opcode) {
-       case Opcode::R_TYPE:
-       case Opcode::S_TYPE:
-       case Opcode::B_TYPE:
+       case Opcode::kRType:
+       case Opcode::kSType:
+       case Opcode::kBType:
         return true;
-       case Opcode::I_TYPE:
-       case Opcode::U_TYPE:
-       case Opcode::J_TYPE:
+       case Opcode::kIType:
+       case Opcode::kUType:
+       case Opcode::kJType:
         return false;
        default:
         // Should never occur.
@@ -73,13 +73,13 @@ namespace riscv_emu::logic {
 
     absl::StatusOr<bool> HasRd(const Opcode opcode) {
       switch (opcode) {
-       case Opcode::R_TYPE:
-       case Opcode::I_TYPE:
-       case Opcode::U_TYPE:
-       case Opcode::J_TYPE:
+       case Opcode::kRType:
+       case Opcode::kIType:
+       case Opcode::kUType:
+       case Opcode::kJType:
         return true;
-       case Opcode::S_TYPE:
-       case Opcode::B_TYPE:
+       case Opcode::kSType:
+       case Opcode::kBType:
         return false;
        default:
         // Should never occur.
@@ -92,23 +92,23 @@ namespace riscv_emu::logic {
   absl::StatusOr<Opcode> Wire::GetOpcode() const {
     const uint32_t opcode = value_.u32 & constants::kOpcodeMask;
     switch (opcode) {
-     case static_cast<uint32_t>(Opcode::R_TYPE):
-      return Opcode::R_TYPE;
+     case static_cast<uint32_t>(Opcode::kRType):
+      return Opcode::kRType;
       break;
-     case static_cast<uint32_t>(Opcode::I_TYPE):
-      return Opcode::I_TYPE;
+     case static_cast<uint32_t>(Opcode::kIType):
+      return Opcode::kIType;
       break;
-     case static_cast<uint32_t>(Opcode::S_TYPE):
-      return Opcode::S_TYPE;
+     case static_cast<uint32_t>(Opcode::kSType):
+      return Opcode::kSType;
       break;
-     case static_cast<uint32_t>(Opcode::B_TYPE):
-      return Opcode::B_TYPE;
+     case static_cast<uint32_t>(Opcode::kBType):
+      return Opcode::kBType;
       break;
-     case static_cast<uint32_t>(Opcode::U_TYPE):
-      return Opcode::U_TYPE;
+     case static_cast<uint32_t>(Opcode::kUType):
+      return Opcode::kUType;
       break;
-     case static_cast<uint32_t>(Opcode::J_TYPE):
-      return Opcode::J_TYPE;
+     case static_cast<uint32_t>(Opcode::kJType):
+      return Opcode::kJType;
       break;
      default:
       return absl::InvalidArgumentError("No opcode found");

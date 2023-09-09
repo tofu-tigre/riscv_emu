@@ -9,5 +9,6 @@ cc_binary(
     "@com_github_google_glog//:glog",
     "//lib/alu:alu",
     "//lib/immediates:imm_decoder",
+    "//lib/cpu:cpu",
   ],
 )

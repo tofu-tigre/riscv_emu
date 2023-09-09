@@ -34,7 +34,7 @@ namespace riscv_emu::imm {
     constexpr uint32_t kBTypeUpperImmMask = 0b1 << kBTypeUpperImmShift;
     constexpr int kBTypeUpperImmCombinedShift = 12;
     constexpr int kBTypeImmSignedBit = 12;
-    constexpr uint32_t kBTypeImmSignExtMask = 0b111111111111111111111 << (kBTypeImmSignedBit + 1);
+    constexpr uint32_t kBTypeImmSignExtMask = 0b1111111111111111111 << (kBTypeImmSignedBit + 1);
 
     constexpr int kUTypeImmShift = 12;
     constexpr uint32_t kUTypeImmMask = 0b11111111111111111111 << kUTypeImmShift;
@@ -44,11 +44,15 @@ namespace riscv_emu::imm {
     constexpr uint32_t kJTypeLowerImmMask = 0b1111111111 << kJTypeLowerImmShift;
     constexpr int kJTypeLowerMiddleImmShift = 20;
     constexpr uint32_t kJTypeLowerMiddleImmMask = 0b1 << kJTypeLowerMiddleImmShift;
+    constexpr int kJTypeLowerMiddleImmCombinedShift = 11;
     constexpr int kJTypeUpperMiddleImmShift = 12;
     constexpr uint32_t kJTypeUpperMiddleImmMask = 0b11111111 << kJTypeUpperMiddleImmShift;
+    constexpr int kJTypeUpperMiddleImmCombinedShift = 12;
     constexpr int kJTypeUpperImmShift = 31;
     constexpr uint32_t kJTypeUpperImmMask = 0b1 << kJTypeUpperImmShift;
+    constexpr int kJTypeUpperImmCombinedShift = 20;
     constexpr int kJTypeImmSignedBit = 20;
+    constexpr uint32_t kJTypeImmSignExtMask = 0b11111111111 << (kJTypeImmSignedBit + 1);
 
   }  // namespace constants
 

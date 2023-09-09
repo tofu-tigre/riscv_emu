@@ -40,21 +40,43 @@ namespace riscv_emu::imm {
       return logic::Wire(output);
     }
 
+    logic::Wire DecodeUTypeImm(const logic::Wire input) {
+      uint32_t output = input.GetUnsigned() & constants::kUTypeImmMask;
+      return logic::Wire(output);
+    }
+
+    logic::Wire DecodeJTypeImm(const logic::Wire input) {
+      const uint32_t valUpper = (input.GetUnsigned() & constants::kJTypeUpperImmMask) >> constants::kJTypeUpperImmShift;
+      const uint32_t valUpperMiddle = (input.GetUnsigned() & constants::kJTypeUpperMiddleImmMask) >> constants::kJTypeUpperMiddleImmShift;
+      const uint32_t valLowerMiddle = (input.GetUnsigned() & constants::kJTypeLowerMiddleImmMask) >> constants::kJTypeLowerMiddleImmShift;
+      // J-type immediates have lowest bit == 0.
+      const uint32_t valLower = (input.GetUnsigned() & constants::kJTypeLowerImmMask) >> (constants::kJTypeLowerImmShift - 1);
+      uint32_t output = (valUpper << constants::kJTypeUpperImmCombinedShift) |
+                     (valUpperMiddle << constants::kJTypeUpperMiddleImmCombinedShift) |
+                     (valLowerMiddle << constants::kJTypeLowerMiddleImmCombinedShift) |
+                     valLower;
+      if (output & (1 << constants::kJTypeImmSignedBit)) {
+        output |= constants::kJTypeImmSignExtMask;
+      }
+      return logic::Wire(output);
+    }
+
   }  // namespace
 
 absl::StatusOr<logic::Wire> DecodeImm(const logic::Wire input) {
   ASSIGN_OR_RETURN(logic::Opcode opcode, input.GetOpcode());
   switch(opcode) {
-   case logic::Opcode::I_TYPE:
+   case logic::Opcode::kIType:
     return DecodeITypeImm(input);
-   case logic::Opcode::S_TYPE:
+   case logic::Opcode::kSType:
     return DecodeSTypeImm(input);
-   case logic::Opcode::B_TYPE:
+   case logic::Opcode::kBType:
     return DecodeBTypeImm(input);
-   case logic::Opcode::U_TYPE:
-   case logic::Opcode::J_TYPE:
-
-   case logic::Opcode::R_TYPE:
+   case logic::Opcode::kUType:
+    return DecodeUTypeImm(input);
+   case logic::Opcode::kJType:
+    return DecodeJTypeImm(input);
+   case logic::Opcode::kRType:
     return absl::InvalidArgumentError("R-type instructions do not support immediates");
    default:
     return absl::InvalidArgumentError("Invalid opcode");

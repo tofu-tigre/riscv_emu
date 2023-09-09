@@ -36,6 +36,7 @@ namespace riscv_emu::logic {
     // of a `Wire::CreateUnsigned()` / `Wire::CreateSigned()` method?
     explicit Wire(uint32_t value) { value_.u32 = value; }
     explicit Wire(int32_t value) { value_.i32 = value; }
+    Wire() { value_.u32 = 0; }
 
     inline void SetUnsigned(uint32_t value) { value_.u32 = value; }
     inline void SetSigned(int32_t value) { value_.i32 = value; }
