@@ -16,8 +16,12 @@ enum class Opcode : uint32_t {
   kIType = 0b0010011,
   kSType = 0b0100011,
   kBType = 0b1100011,
-  kUType = 0b0000011,
+  kLuiType = 0b0110111,  // lui
+  kAuiPcType = 0b0010111,  // auipc
+  kEType = 0b1110011,  // ebreak, ecall
+  kFenceType = 0b0001111,
   kJType = 0b1101111,
+  kLType = 0b0000011,  // lb, lh, lw
 };
 
 }  // namespace riscv_emu::logic

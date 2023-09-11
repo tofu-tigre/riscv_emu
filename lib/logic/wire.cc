@@ -2,6 +2,7 @@
 
 #include <bitset>
 #include "status_macros.h"
+#include "glog/logging.h"
 
 namespace riscv_emu::logic {
 
@@ -11,6 +12,7 @@ namespace riscv_emu::logic {
       switch (opcode) {
        case Opcode::kRType:
        case Opcode::kIType:
+       case Opcode::kILoadType:
        case Opcode::kSType:
        case Opcode::kBType:
         return true;
@@ -28,6 +30,7 @@ namespace riscv_emu::logic {
        case Opcode::kRType:
         return true;
        case Opcode::kIType:
+       case Opcode::kILoadType:
        case Opcode::kSType:
        case Opcode::kBType:
        case Opcode::kUType:
@@ -43,6 +46,7 @@ namespace riscv_emu::logic {
       switch (opcode) {
        case Opcode::kRType:
        case Opcode::kIType:
+       case Opcode::kILoadType:
        case Opcode::kSType:
        case Opcode::kBType:
         return true;
@@ -62,6 +66,7 @@ namespace riscv_emu::logic {
        case Opcode::kBType:
         return true;
        case Opcode::kIType:
+       case Opcode::kILoadType:
        case Opcode::kUType:
        case Opcode::kJType:
         return false;
@@ -75,6 +80,7 @@ namespace riscv_emu::logic {
       switch (opcode) {
        case Opcode::kRType:
        case Opcode::kIType:
+       case Opcode::kILoadType:
        case Opcode::kUType:
        case Opcode::kJType:
         return true;
@@ -94,22 +100,18 @@ namespace riscv_emu::logic {
     switch (opcode) {
      case static_cast<uint32_t>(Opcode::kRType):
       return Opcode::kRType;
-      break;
      case static_cast<uint32_t>(Opcode::kIType):
       return Opcode::kIType;
-      break;
      case static_cast<uint32_t>(Opcode::kSType):
       return Opcode::kSType;
-      break;
      case static_cast<uint32_t>(Opcode::kBType):
       return Opcode::kBType;
-      break;
      case static_cast<uint32_t>(Opcode::kUType):
       return Opcode::kUType;
-      break;
      case static_cast<uint32_t>(Opcode::kJType):
       return Opcode::kJType;
-      break;
+     case static_cast<uint32_t>(Opcode::kILoadType):
+      return Opcode::kILoadType;
      default:
       return absl::InvalidArgumentError("No opcode found");
     }
@@ -129,6 +131,14 @@ namespace riscv_emu::logic {
     ASSIGN_OR_RETURN(const bool hasFunc7, HasFunc7(opcode));
     if (!hasFunc7) {
       return absl::FailedPreconditionError("Instruction does not contain a func7 field");
+    }
+    return (value_.u32 & constants::kFunc7Mask) >> constants::kFunc7Shift;
+  }
+
+  absl::StatusOr<uint32_t> Wire::GetFunc7Imm() const {
+    ASSIGN_OR_RETURN(const Opcode opcode, this->GetOpcode());
+    if (opcode != Opcode::kIType) {
+      return absl::FailedPreconditionError("Instruction does not contain a func7-imm field");
     }
     return (value_.u32 & constants::kFunc7Mask) >> constants::kFunc7Shift;
   }
@@ -163,20 +173,20 @@ namespace riscv_emu::logic {
     return (value_.u32 & constants::kRs2Mask) >> constants::kRs2Shift;
   }
 
-  absl::StatusOr<uint32_t> Wire::GetByte(size_t at_index) {
+  absl::StatusOr<uint8_t> Wire::GetByte(size_t at_index) const {
     if (at_index >= constants::kBytesInWord) {
       return absl::InvalidArgumentError("Request byte at invalid index");
     }
     constexpr int kBitsInAByte = 8;
-    return value_.u32 & (constants::kByteMask << (at_index * kBitsInAByte));
+    return (value_.u32 & (constants::kByteMask << (at_index * kBitsInAByte))) >> (at_index * kBitsInAByte);
   }
 
-  absl::StatusOr<uint32_t> Wire::GetHalfWord(size_t at_index) {
+  absl::StatusOr<uint16_t> Wire::GetHalfWord(size_t at_index) const {
     if (at_index >= constants::kHalfWordsInWord) {
       return absl::InvalidArgumentError("Request halfword at invalid index");
     }
     constexpr int kBitsInAHalfWord = 16;
-    return value_.u32 & (constants::kByteMask << (at_index * kBitsInAHalfWord));
+    return (value_.u32 & (constants::kByteMask << (at_index * kBitsInAHalfWord))) >> (at_index * kBitsInAHalfWord);
   }
 
   std::ostream& operator<<(std::ostream& os, const Wire& wire) {

@@ -1,5 +1,6 @@
 #include "alu.h"
 #include "status_macros.h"
+#include "glog/logging.h"
 
 namespace riscv_emu {
 
@@ -45,6 +46,17 @@ namespace riscv_emu {
         return absl::FailedPreconditionError("Instruction attempted to bit shift > 31 bits");
       }
       int32_t result = 0;
+#ifdef __APPLE__
+      asm (
+        "mov %1, %%eax\n\t"      // Move first reg. to %eax
+        "mov %2, %%ecx\n\t"      // Move second reg. to %%ecx
+        "ror %%cl, %%eax\n\t"   // Rotate right
+        "mov %%eax, %0"          // Move %%eax to 'result'
+        : "=r" (result)
+        : "r" (val1.GetSigned()), "r" (val2.GetUnsigned())
+        : "eax", "ecx"
+    );
+#else
       asm (
         "mov %1, %%eax\n\t"      // Move first reg. to %eax
         "mov %2, %%ecx\n\t"      // Move second reg. to %%ecx
@@ -54,6 +66,7 @@ namespace riscv_emu {
         : "r" (val1.GetSigned()), "r" (val2.GetUnsigned())
         : "eax", "ecx"
     );
+#endif
       return logic::Wire(result);
     }
 

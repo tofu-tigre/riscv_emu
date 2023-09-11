@@ -48,12 +48,13 @@ namespace riscv_emu::logic {
     inline void SetSigned(int32_t value) { value_.i32 = value; }
     inline uint32_t GetUnsigned() const { return value_.u32; }
     inline int32_t GetSigned() const { return value_.i32; }
-    absl::StatusOr<uint32_t> GetByte(size_t at_index);
-    absl::StatusOr<uint32_t> GetHalfWord(size_t at_index);
+    absl::StatusOr<uint8_t> GetByte(size_t at_index) const;
+    absl::StatusOr<uint16_t> GetHalfWord(size_t at_index) const;
 
     absl::StatusOr<Opcode> GetOpcode() const;
     absl::StatusOr<uint32_t> GetFunc3() const;
     absl::StatusOr<uint32_t> GetFunc7() const;
+    absl::StatusOr<uint32_t> GetFunc7Imm() const;
     absl::StatusOr<uint32_t> GetRs1() const;
     absl::StatusOr<uint32_t> GetRs2() const;
     absl::StatusOr<uint32_t> GetRd() const;

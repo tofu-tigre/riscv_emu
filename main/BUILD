@@ -7,6 +7,7 @@ cc_binary(
     "@com_google_absl//absl/status:statusor",
     "@status_macros//:status_macros",
     "@com_github_google_glog//:glog",
+    "@com_github_gflags_gflags//:gflags",
     "//lib/alu:alu",
     "//lib/immediates:imm_decoder",
     "//lib/cpu:cpu",

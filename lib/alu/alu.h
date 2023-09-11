@@ -13,14 +13,15 @@ namespace riscv_emu {
   }  // namespace alu::constants
 
 enum class AluOp {
-  kAdd,
-  kSub,
-  kOr,
-  kAnd,
-  kXor,
-  kSll,  // Shift left logical
-  kSra,  // Shift right arithmetic
-  kSrl,  // Shift right logical
+  kAdd = 0b000,
+  kSub = 0b1010, // Same as below, DO NOT USE.
+  kOr  = 0b110,
+  kAnd = 0b111,
+  kXor = 0b100,
+  kSll = 0b001,   // Shift left logical
+  kSra = 0b101,   // Shift right arithmetic
+  kSrl = 0b1111,  // Shift right logical. Note that this is actually the same value as `kSra`
+                  // but due to compiler constraints must be a different value. DO NOT USE.
 };
 
 class Alu final {

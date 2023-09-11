@@ -3,7 +3,11 @@
 
 #include <stdint.h>
 #include "lib/logic/register.h"
+#include "lib/logic/wire.h"
 #include "lib/alu/alu.h"
+#include "lib/memory/dram.h"
+#include "instr_decoder.h"
+#include "glog/logging.h"
 #include "absl/status/status.h"
 
 namespace riscv_emu {
@@ -15,6 +19,14 @@ class Cpu final {
   logic::Register instr_; 
   bool power_is_on_;
   Alu alu_;
+  memory::Dram dmem_;
+  memory::Dram imem_;
+  InstrDecoder decoder_;
+
+  logic::Wire alu_out_;
+  logic::Wire mem_out_;
+  logic::Wire a_out_;
+  logic::Wire b_out_;
 
   logic::Register registers_[32];
 
@@ -25,6 +37,7 @@ class Cpu final {
   absl::Status Writeback();
 
  public:
+  Cpu();
   absl::Status Boot();
 };
 

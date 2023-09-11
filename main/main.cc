@@ -5,6 +5,7 @@
 #include "absl/status/status.h"
 #include "glog/logging.h"
 #include "lib/cpu/cpu.h"
+#include "gflags/gflags.h"
 
 
 int main(int argc, char* argv[]) {
@@ -15,7 +16,10 @@ int main(int argc, char* argv[]) {
   google::InitGoogleLogging(argv[0]);
 
   riscv_emu::Cpu cpu;
-  cpu.Boot();
+  absl::Status status = cpu.Boot();
+  if (!status.ok()) {
+    LOG(ERROR) << status;
+  }
   
   return 0;
 }

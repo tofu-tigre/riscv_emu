@@ -56,7 +56,15 @@ namespace riscv_emu::imm {
 
   }  // namespace constants
 
-absl::StatusOr<logic::Wire> DecodeImm(logic::Wire wire);
+  enum class ImmSel {
+    kSType,
+    kIType,
+    kBType,
+    kUType,
+    kJType,
+  };
+
+absl::StatusOr<logic::Wire> DecodeImm(ImmSel imm_sel, logic::Wire wire);
 
 }  // namespace riscv_emu::imm
 

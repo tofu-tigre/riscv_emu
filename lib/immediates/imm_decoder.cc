@@ -63,23 +63,20 @@ namespace riscv_emu::imm {
 
   }  // namespace
 
-absl::StatusOr<logic::Wire> DecodeImm(const logic::Wire input) {
-  ASSIGN_OR_RETURN(logic::Opcode opcode, input.GetOpcode());
-  switch(opcode) {
-   case logic::Opcode::kIType:
+absl::StatusOr<logic::Wire> DecodeImm(const ImmSel imm_sel, const logic::Wire input) {
+  switch(imm_sel) {
+   case ImmSel::kIType:
     return DecodeITypeImm(input);
-   case logic::Opcode::kSType:
+   case ImmSel::kSType:
     return DecodeSTypeImm(input);
-   case logic::Opcode::kBType:
+   case ImmSel::kBType:
     return DecodeBTypeImm(input);
-   case logic::Opcode::kUType:
+   case ImmSel::kUType:
     return DecodeUTypeImm(input);
-   case logic::Opcode::kJType:
+   case ImmSel::kJType:
     return DecodeJTypeImm(input);
-   case logic::Opcode::kRType:
-    return absl::InvalidArgumentError("R-type instructions do not support immediates");
    default:
-    return absl::InvalidArgumentError("Invalid opcode");
+    return absl::InternalError("Immediate decoder select not properly configured");
   }
 }
 
