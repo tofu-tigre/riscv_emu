@@ -20,7 +20,8 @@ enum class Opcode : uint32_t {
   kAuiPcType = 0b0010111,  // auipc
   kEType = 0b1110011,  // ebreak, ecall
   kFenceType = 0b0001111,
-  kJType = 0b1101111,
+  kJalType = 0b1101111,
+  kJalrType = 0b1100111,
   kLType = 0b0000011,  // lb, lh, lw
 };
 

@@ -12,7 +12,7 @@ namespace riscv_emu::memory {
   namespace constants {
     // Note that `kDramSize` must be word-aligned to prevent logic
     // from accessing non-existing memory (out of range).
-    constexpr size_t kDramSize = 1024 * 100;  // 100 KiB
+    constexpr size_t kDramSize = 1024 * 1000;  // 1000 KiB
     constexpr uint32_t kDramFetchMask = 0b11111;
 
   }  // namespace constants
@@ -25,16 +25,17 @@ enum class AccessType {
   kHalfwordUnsigned = 0b101,
 };
 
-class Dram {
+class Dram final {
  public:
   // TODO: Consider including `AccessType` as an parameter?
+  Dram();
   absl::StatusOr<logic::Wire> Read(size_t at_index);
   absl::Status Write(size_t at_index, logic::Wire val);
-  absl::Status Flash(absl::string_view filename);
+  absl::Status Flash(absl::string_view filename, size_t at);
   inline void SetAccessType(const AccessType type) { access_type_ = type; }
 
  private:
-  uint8_t data_[constants::kDramSize] {0};
+  std::unique_ptr<uint8_t[]> data_;
   AccessType access_type_;
 };
 

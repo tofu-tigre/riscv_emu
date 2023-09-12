@@ -38,7 +38,6 @@ namespace riscv_emu::imm {
 
     constexpr int kUTypeImmShift = 12;
     constexpr uint32_t kUTypeImmMask = 0b11111111111111111111 << kUTypeImmShift;
-    constexpr int kUTypeImmSignedBit = 31;
 
     constexpr int kJTypeLowerImmShift = 21;
     constexpr uint32_t kJTypeLowerImmMask = 0b1111111111 << kJTypeLowerImmShift;

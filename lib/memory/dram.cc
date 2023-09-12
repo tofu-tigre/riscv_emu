@@ -1,4 +1,6 @@
 #include "dram.h"
+#include <iostream>
+#include <fstream>
 #include "glog/logging.h"
 #include "status_macros.h"
 
@@ -31,16 +33,19 @@ namespace riscv_emu::memory {
     logic::Wire ReadByte(const uint8_t* loc, const size_t at_index, const bool sign_extend) {
       const uint32_t val = loc[at_index];
       if (sign_extend & (val & 0b10000000)) {
-
+        return logic::Wire(0xffffff00 | val);
       } else {
-        
         return logic::Wire(val);
       }
     }
 
     logic::Wire ReadHalfWord(const uint8_t* loc, const size_t at_index, const bool sign_extend) {
       const uint32_t val = (loc[at_index + 1] << 8) | loc[at_index];
-      return logic::Wire(val);
+      if (sign_extend & (val & 0b1000000000000000)) {
+        return logic::Wire(0xffff0000 | val);
+      } else {
+        return logic::Wire(val);
+      }
     }
 
     logic::Wire ReadWord(const uint8_t* loc, const size_t at_index) {
@@ -79,13 +84,15 @@ absl::StatusOr<logic::Wire> Dram::Read(const size_t at_index) {
   }
   switch (access_type_) {
    case AccessType::kByte:
+    return ReadByte(data_.get(), at_index, /*signed=*/true);
    case AccessType::kByteUnsigned:
-    return ReadByte(data_, at_index);
+    return ReadByte(data_.get(), at_index, /*signed=*/false);
    case AccessType::kHalfword:
+    return ReadHalfWord(data_.get(), at_index, /*signed=*/true);
    case AccessType::kHalfwordUnsigned:
-    return ReadHalfWord(data_, at_index);
+    return ReadHalfWord(data_.get(), at_index, /*signed=*/false);
    case AccessType::kWord:
-    return ReadWord(data_, at_index);
+    return ReadWord(data_.get(), at_index);
    default:
     return absl::InternalError("Dram access type not properly set.");
   }
@@ -102,22 +109,41 @@ absl::Status Dram::Write(const size_t at_index, const logic::Wire val) {
   switch (access_type_) {
    case AccessType::kByte:
    case AccessType::kByteUnsigned:
-    WriteByte(data_, at_index, val);
+    WriteByte(data_.get(), at_index, val);
     return absl::OkStatus();
    case AccessType::kHalfword:
    case AccessType::kHalfwordUnsigned:
-    WriteHalfword(data_, at_index, val);
+    WriteHalfword(data_.get(), at_index, val);
     return absl::OkStatus();
    case AccessType::kWord:
-    WriteWord(data_, at_index, val);
+    WriteWord(data_.get(), at_index, val);
     return absl::OkStatus();
    default:
     return absl::InternalError("`Dram access type not properly set.");
   }
 }
 
-absl::Status Dram::Flash(const absl::string_view filename) {
+absl::Status Dram::Flash(const absl::string_view filename, const size_t at) {
+  std::ifstream input_file(filename.data(), std::ios::in | std::ios::binary);
+  if (!input_file.is_open()) {
+    return absl::NotFoundError("Failed to open file");
+  }
+
+  size_t written = 0;
+  char c = 0;
+  while (input_file.get(c)) {
+    LOG(INFO) << "WRITING BYTE 0x" << std::hex << (uint32_t)c << " to mem at 0x" << (at + written);
+    if ((at + written) >= constants::kDramSize) {
+      return absl::OutOfRangeError("disk image is larger than memory available");
+    }
+    data_[at + written] = static_cast<uint8_t>(c);
+    written++;
+  }
+  input_file.close();
+
   return absl::OkStatus();
 }
+
+Dram::Dram() : data_(std::move(std::make_unique<uint8_t[]>(constants::kDramSize))) {}
 
 }  // namespace riscv_emu::memory

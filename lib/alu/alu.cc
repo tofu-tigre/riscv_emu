@@ -86,6 +86,9 @@ namespace riscv_emu {
     bool hasOverflow = false;
     absl::StatusOr<logic::Wire> output;
     switch (op) {
+     case AluOp::kBCopy:
+      output = absl::StatusOr<logic::Wire>(val2);
+      break;
      case AluOp::kAdd:
       output = Add(val1, val2, &hasOverflow);
       break;

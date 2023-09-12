@@ -12,12 +12,14 @@ namespace riscv_emu::logic {
       switch (opcode) {
        case Opcode::kRType:
        case Opcode::kIType:
-       case Opcode::kILoadType:
+       case Opcode::kJalrType:
+       case Opcode::kLType:
        case Opcode::kSType:
        case Opcode::kBType:
         return true;
-       case Opcode::kUType:
-       case Opcode::kJType:
+       case Opcode::kLuiType:
+       case Opcode::kAuiPcType:
+       case Opcode::kJalType:
         return false;
        default:
         // Should never occur.
@@ -30,11 +32,13 @@ namespace riscv_emu::logic {
        case Opcode::kRType:
         return true;
        case Opcode::kIType:
-       case Opcode::kILoadType:
+       case Opcode::kLType:
+       case Opcode::kJalrType:
        case Opcode::kSType:
        case Opcode::kBType:
-       case Opcode::kUType:
-       case Opcode::kJType:
+       case Opcode::kAuiPcType:
+       case Opcode::kLuiType:
+       case Opcode::kJalType:
         return false;
        default:
         // Should never occur.
@@ -46,12 +50,14 @@ namespace riscv_emu::logic {
       switch (opcode) {
        case Opcode::kRType:
        case Opcode::kIType:
-       case Opcode::kILoadType:
+       case Opcode::kJalrType:
+       case Opcode::kLType:
        case Opcode::kSType:
        case Opcode::kBType:
         return true;
-       case Opcode::kUType:
-       case Opcode::kJType:
+       case Opcode::kLuiType:
+       case Opcode::kAuiPcType:
+       case Opcode::kJalType:
         return false;
        default:
         // Should never occur.
@@ -66,9 +72,11 @@ namespace riscv_emu::logic {
        case Opcode::kBType:
         return true;
        case Opcode::kIType:
-       case Opcode::kILoadType:
-       case Opcode::kUType:
-       case Opcode::kJType:
+       case Opcode::kLType:
+       case Opcode::kJalrType:
+       case Opcode::kAuiPcType:
+       case Opcode::kLuiType:
+       case Opcode::kJalType:
         return false;
        default:
         // Should never occur.
@@ -80,9 +88,11 @@ namespace riscv_emu::logic {
       switch (opcode) {
        case Opcode::kRType:
        case Opcode::kIType:
-       case Opcode::kILoadType:
-       case Opcode::kUType:
-       case Opcode::kJType:
+       case Opcode::kLType:
+       case Opcode::kLuiType:
+       case Opcode::kAuiPcType:
+       case Opcode::kJalType:
+       case Opcode::kJalrType:
         return true;
        case Opcode::kSType:
        case Opcode::kBType:
@@ -106,12 +116,16 @@ namespace riscv_emu::logic {
       return Opcode::kSType;
      case static_cast<uint32_t>(Opcode::kBType):
       return Opcode::kBType;
-     case static_cast<uint32_t>(Opcode::kUType):
-      return Opcode::kUType;
-     case static_cast<uint32_t>(Opcode::kJType):
-      return Opcode::kJType;
-     case static_cast<uint32_t>(Opcode::kILoadType):
-      return Opcode::kILoadType;
+     case static_cast<uint32_t>(Opcode::kLuiType):
+      return Opcode::kLuiType;
+     case static_cast<uint32_t>(Opcode::kAuiPcType):
+      return Opcode::kAuiPcType;
+     case static_cast<uint32_t>(Opcode::kJalType):
+      return Opcode::kJalType;
+     case static_cast<uint32_t>(Opcode::kJalrType):
+      return Opcode::kJalrType;
+     case static_cast<uint32_t>(Opcode::kLType):
+      return Opcode::kLType;
      default:
       return absl::InvalidArgumentError("No opcode found");
     }

@@ -13,6 +13,7 @@ namespace riscv_emu {
   }  // namespace alu::constants
 
 enum class AluOp {
+  kBCopy = 0b11111,
   kAdd = 0b000,
   kSub = 0b1010, // Same as below, DO NOT USE.
   kOr  = 0b110,

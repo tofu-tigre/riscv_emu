@@ -134,7 +134,7 @@ absl::Status InstrDecoder::DecodeILTypeInstr(const logic::Wire instr) {
   rd_sel_ = logic::Wire(rd);
 
   // Set selects.
-  op_ = logic::Opcode::kILoadType;
+  op_ = logic::Opcode::kLType;
   b_sel_ = BSel::kImmOut;
   a_sel_ = ASel::kRegOut;
   wb_sel_ = WbSel::kMemOut;
@@ -250,6 +250,92 @@ absl::Status InstrDecoder::SetBranchComp(const branch::ComparisonResult result) 
   }
 }
 
+absl::Status InstrDecoder::DecodeLuiTypeInstr(const logic::Wire instr) {
+  VLOG(5) << "Decoding U-type instruction";
+  // Set register selects.
+  ASSIGN_OR_RETURN(const uint32_t rd, instr.GetRd());
+  rd_sel_ = logic::Wire(rd);
+
+  // Set selects.
+  op_ = logic::Opcode::kLuiType;
+  b_sel_ = BSel::kImmOut;
+  pc_sel_ = PcSel::kPcPlus4;
+  reg_write_en_ = (rd != 0) ? true : false;
+  wb_sel_ = WbSel::kAluOut;
+  imm_sel_ = imm::ImmSel::kUType;
+  alu_sel_ = AluOp::kBCopy;
+  mem_op_ = MemOp::kNone;
+  return absl::OkStatus();
+}
+
+absl::Status InstrDecoder::DecodeAuiPcTypeInstr(const logic::Wire instr) {
+  VLOG(5) << "Decoding U-type instruction";
+  // Set register selects.
+  ASSIGN_OR_RETURN(const uint32_t rd, instr.GetRd());
+  rd_sel_ = logic::Wire(rd);
+
+  // Set selects.
+  op_ = logic::Opcode::kAuiPcType;
+  a_sel_ = ASel::kPcOut;
+  b_sel_ = BSel::kImmOut;
+  pc_sel_ = PcSel::kPcPlus4;
+  reg_write_en_ = (rd != 0) ? true : false;
+  wb_sel_ = WbSel::kAluOut;
+  imm_sel_ = imm::ImmSel::kUType;
+  alu_sel_ = AluOp::kBCopy;
+  mem_op_ = MemOp::kNone;
+  return absl::OkStatus();
+}
+
+absl::Status InstrDecoder::DecodeJalTypeInstr(const logic::Wire instr) {
+  VLOG(5) << "Decoding J-type instruction";
+  // Set register selects.
+  ASSIGN_OR_RETURN(const uint32_t rd, instr.GetRd());
+  rd_sel_ = logic::Wire(rd);
+
+  // Set selects.
+  op_ = logic::Opcode::kJalType;
+  a_sel_ = ASel::kPcOut;
+  b_sel_ = BSel::kImmOut;
+  pc_sel_ = PcSel::kAluOut;
+  reg_write_en_ = (rd != 0) ? true : false;
+  wb_sel_ = WbSel::kPcPlus4;
+  imm_sel_ = imm::ImmSel::kJType;
+  alu_sel_ = AluOp::kAdd;
+  mem_op_ = MemOp::kNone;
+  return absl::OkStatus();
+}
+
+absl::Status InstrDecoder::DecodeJalrTypeInstr(const logic::Wire instr) {
+  VLOG(5) << "Decoding J-type instruction";
+  // Set register selects.
+  ASSIGN_OR_RETURN(const uint32_t rs1, instr.GetRs1());
+  ASSIGN_OR_RETURN(const uint32_t rd, instr.GetRd());
+  rs1_sel_ = logic::Wire(rs1);
+  rd_sel_ = logic::Wire(rd);
+
+  // Set selects.
+  op_ = logic::Opcode::kJalrType;
+  a_sel_ = ASel::kRegOut;
+  b_sel_ = BSel::kImmOut;
+  pc_sel_ = PcSel::kAluOut;
+  reg_write_en_ = (rd != 0) ? true : false;
+  wb_sel_ = WbSel::kPcPlus4;
+  imm_sel_ = imm::ImmSel::kIType;
+  alu_sel_ = AluOp::kAdd;
+  mem_op_ = MemOp::kNone;
+  return absl::OkStatus();
+}
+
+absl::Status InstrDecoder::DecodeFenceTypeInstr(const logic::Wire instr) {
+  VLOG(5) << "Decoding U-type instruction";
+  op_ = logic::Opcode::kFenceType;
+  pc_sel_ = PcSel::kPcPlus4;
+  reg_write_en_ = false;
+  mem_op_ = MemOp::kNone;
+  return absl::OkStatus();
+}
+
 absl::Status InstrDecoder::Decode(const logic::Wire instr) {
   instr_ = instr;
   ASSIGN_OR_RETURN(const logic::Opcode opcode, instr.GetOpcode());
@@ -258,12 +344,22 @@ absl::Status InstrDecoder::Decode(const logic::Wire instr) {
     return DecodeRTypeInstr(instr);
    case logic::Opcode::kIType:
     return DecodeITypeInstr(instr);
-   case logic::Opcode::kILoadType:
+   case logic::Opcode::kLType:
     return DecodeILTypeInstr(instr);
    case logic::Opcode::kSType:
     return DecodeSTypeInstr(instr);
    case logic::Opcode::kBType:
     return DecodeBTypeInstr(instr);
+   case logic::Opcode::kLuiType:
+    return DecodeLuiTypeInstr(instr);
+   case logic::Opcode::kAuiPcType:
+    return DecodeAuiPcTypeInstr(instr);
+   case logic::Opcode::kJalType:
+    return DecodeJalTypeInstr(instr);
+   case logic::Opcode::kJalrType:
+    return DecodeJalrTypeInstr(instr);
+   case logic::Opcode::kFenceType:
+    return DecodeFenceTypeInstr(instr);
    default:
     return absl::InternalError("Instruction decoder detected invalid opcode");
   }

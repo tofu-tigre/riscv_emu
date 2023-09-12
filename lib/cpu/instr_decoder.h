@@ -62,6 +62,11 @@ class InstrDecoder final {
   absl::Status DecodeILTypeInstr(logic::Wire instr);
   absl::Status DecodeSTypeInstr(const logic::Wire instr);
   absl::Status DecodeBTypeInstr(const logic::Wire instr);
+  absl::Status DecodeLuiTypeInstr(const logic::Wire instr);
+  absl::Status DecodeAuiPcTypeInstr(const logic::Wire instr);
+  absl::Status DecodeJalTypeInstr(const logic::Wire instr);
+  absl::Status DecodeJalrTypeInstr(const logic::Wire instr);
+  absl::Status DecodeFenceTypeInstr(const logic::Wire instr);
 
   bool is_invalid_instr_;
   logic::Wire instr_;
