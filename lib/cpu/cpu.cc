@@ -16,6 +16,13 @@ namespace riscv_emu {
       return registers[at_index].GetOut();
     }
 
+    absl::StatusOr<logic::Wire> GetRegister(logic::Register registers[32], const logic::Wire at_index) {
+      if (at_index.GetUnsigned() > 31) {
+        return absl::OutOfRangeError("Cannot access register at index > 31");
+      }
+      return registers[at_index.GetUnsigned()].GetOut();
+    }
+
     absl::Status SetRegister(logic::Register registers[32], const size_t at_index, const logic::Wire val) {
       if (at_index > 31) {
         return absl::OutOfRangeError("Cannot access register at index > 31");
@@ -25,12 +32,12 @@ namespace riscv_emu {
     }
 
     void PrintRegisters(const logic::Register registers[32]) {
-      VLOG(4) << "Register debug info:";
+      VLOG(1) << "Register debug info:";
       for (int i = 0; i < 32; ++i) {
         if (i < 10) {
-          VLOG(4) << "0x0" << std::dec << i << ": " << std::hex << registers[i].GetOut().GetUnsigned() << std::endl;
+          VLOG(1) << "0x0" << std::dec << i << ": " << std::hex << registers[i].GetOut().GetUnsigned() << std::endl;
         } else {
-          VLOG(5) << "0x" << std::dec << i << ": " << std::hex << registers[i].GetOut().GetUnsigned() << std::endl;
+          VLOG(2) << "0x" << std::dec << i << ": " << std::hex << registers[i].GetOut().GetUnsigned() << std::endl;
         }
         
       }
@@ -42,10 +49,9 @@ namespace riscv_emu {
 Cpu::Cpu() {
   pc_.SetIn(logic::Wire(0x800U - 0x4U));
   imem_.SetAccessType(memory::AccessType::kWord);
-  if (!imem_.Flash("/tmp/progs/fib.o", 0x800).ok()) {
+  if (!imem_.Flash("/tmp/progs/foo.bin", 0x800).ok()) {
     LOG(FATAL) << "Something happened";
   }
-  LOG(INFO) << "0x800: " << std::hex << imem_.Read(0x8000U).value().GetUnsigned();
   // imem_.Write(0x8000U, logic::Wire(0x00a00093)).IgnoreError();  // addi x1, x0, 10
   // imem_.Write(0x8004U, logic::Wire(0xfff08093)).IgnoreError();  // addi x1, x1, -1
   // imem_.Write(0x8008U, logic::Wire(0xfe009ee3)).IgnoreError();  // bne x1, x0, -4
@@ -59,18 +65,18 @@ Cpu::Cpu() {
 
 absl::Status Cpu::Fetch() {
   switch (decoder_.GetPcSel()) {
-   case PcSel::kPcPlus4:
+   case decoder::PcSel::kPcPlus4:
     pc_.SetIn(logic::Wire(pc_.GetOut().GetUnsigned() + 4));
     break;
-   case PcSel::kAluOut:
+   case decoder::PcSel::kAluOut:
     pc_.SetIn(alu_out_);
     break;
    default:
     return absl::InternalError("Invalid PC select");
   }
 
-  VLOG(4) << "Fetching next instruction from PC: " << pc_.GetOut();
-  absl::StatusOr<logic::Wire> instr = imem_.Read(pc_.GetOut());
+  VLOG(1) << "PC: 0x" << std::hex << pc_.GetOut().GetUnsigned();
+  absl::StatusOr<logic::Wire> instr = imem_.Read(pc_.GetOut().GetUnsigned());
   if (!instr.ok()) {
     if (absl::IsOutOfRange(instr.status())) {
     // TODO: Raise exception and loop PC to addr. 0x0.
@@ -78,27 +84,27 @@ absl::Status Cpu::Fetch() {
       return instr.status();
     }
   }
-  
+  VLOG(1) << "Instruction: 0x" << std::hex << instr->GetUnsigned();
   instr_.SetIn(*instr);
   return absl::OkStatus();
 }
 
 absl::Status Cpu::Decode() {
-  VLOG(4) << "Decoding instruction: " << std::hex << instr_.GetOut().GetUnsigned();
-  RETURN_IF_ERROR(decoder_.Decode(instr_.GetOut()));
   absl::Status decoder_status = decoder_.Decode(instr_.GetOut());
   if (!decoder_status.ok()) {
     if (absl::IsInvalidArgument(decoder_status)) {
       // TODO: Raise exception.
+      // But for now, exit.
+      return decoder_status;
     } else {
       return decoder_status;
     }
   }
-  if(decoder_.GetESel() == ESel::kEBreak) {
+  if(decoder_.GetESel() == decoder::ESel::kEBreak) {
     power_is_on_ = false;
   }
-  ASSIGN_OR_RETURN(const logic::Wire rs1_out, GetRegister(registers_, decoder_.GetRs1().GetUnsigned()));
-  ASSIGN_OR_RETURN(const logic::Wire rs2_out, GetRegister(registers_, decoder_.GetRs2().GetUnsigned()));
+  ASSIGN_OR_RETURN(const logic::Wire rs1_out, GetRegister(registers_, decoder_.GetRs1()));
+  ASSIGN_OR_RETURN(const logic::Wire rs2_out, GetRegister(registers_, decoder_.GetRs2()));
 
   switch (decoder_.GetASel()) {
    case decoder::ASel::kRegOut:
@@ -134,17 +140,12 @@ absl::Status Cpu::Decode() {
 }
 
 absl::Status Cpu::Execute() {
-  VLOG(4) << "Executing instruction: " << instr_.GetOut();
-
   ASSIGN_OR_RETURN(const logic::Wire rs1_out, GetRegister(registers_, decoder_.GetRs1()));
   ASSIGN_OR_RETURN(const logic::Wire rs2_out, GetRegister(registers_, decoder_.GetRs2()));
   const branch::ComparisonResult res = branch::DoBranchComp(decoder_.IsBranchUnsigned(), rs1_out, rs2_out);
   RETURN_IF_ERROR(decoder_.SetBranchComp(res));
 
   ASSIGN_OR_RETURN(alu_out_, alu_.DoOp(decoder_.GetAluSel(), a_out_, b_out_));
-  VLOG(5) << "Alu a-out is: " << a_out_;
-  VLOG(5) << "Alu b-out is: " << b_out_;
-  VLOG(5) << "Alu output is: " << alu_out_;
   return absl::OkStatus();
 }
 
@@ -154,48 +155,47 @@ absl::Status Cpu::Memory() {
   absl::StatusOr<logic::Wire> mem_out;
   absl::Status mem_write_status;
   switch (decoder_.GetMemOp()) {
-   case MemOp::kNone:
+   case decoder::MemOp::kNone:
     break;
-   case MemOp::kRead:
+   case decoder::MemOp::kRead:
     mem_out = dmem_.Read(alu_out_.GetUnsigned());
     if (!mem_out.ok()) {
       if (absl::IsOutOfRange(mem_out.status())) {
-        // TODO: raise a bus error exception.
+        // TODO: Raise a bus error exception.
         break;
       }
       return mem_out.status();
     }
-    if (!mem_out.ok()) {
-      return mem_out.status();
-    }
     mem_out_ = *mem_out;
     break;
-   case MemOp::kWrite:
+   case decoder::MemOp::kWrite:
     mem_write_status = dmem_.Write(alu_out_.GetUnsigned(), rs2_out);
     if (!mem_write_status.ok()) {
+      if (absl::IsOutOfRange(mem_write_status)) {
+        // TODO: Raise a bus error exception.
+      }
       return mem_write_status;
     }
     break;
    default:
-    return absl::InternalError("Invalid memory operation detected");
+    return absl::InternalError("Invalid memory operation");
   }
   return absl::OkStatus();
 }
 
 absl::Status Cpu::Writeback() {
-  VLOG(4) << "Doing writeback for instruction: " << instr_.GetOut();
   if (!decoder_.GetRegWriteEn()) {
     return absl::OkStatus();
   }
   switch (decoder_.GetWbSel()) {
-   case WbSel::kAluOut:
-    VLOG(5) << "Writing to dest. register 0x" << decoder_.GetRd().GetUnsigned() << " from alu output: " << alu_out_;
+   case decoder::WbSel::kNone:
+   case decoder::WbSel::kAluOut:
     RETURN_IF_ERROR(SetRegister(registers_, decoder_.GetRd().GetUnsigned(), alu_out_));
     break;
-   case WbSel::kMemOut:
+   case decoder::WbSel::kMemOut:
     RETURN_IF_ERROR(SetRegister(registers_, decoder_.GetRd().GetUnsigned(), mem_out_));
     break;
-   case WbSel::kPcPlus4:
+   case decoder::WbSel::kPcPlus4:
     RETURN_IF_ERROR(SetRegister(registers_, decoder_.GetRd().GetUnsigned(), logic::Wire(pc_.GetOut().GetUnsigned() + 4)));
     break;
    default:

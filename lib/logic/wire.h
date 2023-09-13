@@ -21,6 +21,7 @@ constexpr uint32_t kFunc7Mask = 0b1111111 << kFunc7Shift;
 constexpr uint32_t kRdMask = 0b11111 << kRdShift;
 constexpr uint32_t kRs1Mask = 0b11111 << kRs1Shift;
 constexpr uint32_t kRs2Mask = 0b11111 << kRs2Shift; 
+constexpr uint32_t kCsrMask = 0b111111111111 << kRs2Shift;
 
 constexpr int kBytesInWord = 4;
 constexpr uint32_t kByteMask = 0xff;
@@ -50,6 +51,7 @@ class Wire final {
   absl::StatusOr<uint32_t> GetRs1() const;
   absl::StatusOr<uint32_t> GetRs2() const;
   absl::StatusOr<uint32_t> GetRd() const;
+  absl::StatusOr<uint32_t> GetCsr() const;
 
   friend std::ostream& operator<<(std::ostream& os, const Wire& dt);
 

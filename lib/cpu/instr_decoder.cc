@@ -70,7 +70,7 @@ absl::Status InstrDecoder::DecodeRTypeInstr() {
 }
 
 absl::Status InstrDecoder::DecodeITypeInstr() {
-  VLOG(5) << "Decoding I-type instruction";
+  VLOG(5) << "Decoding I-type instruction" << instr_;
   // Set register selects.
   ASSIGN_OR_RETURN(const uint32_t rs1, instr_.GetRs1());
   ASSIGN_OR_RETURN(const uint32_t rd, instr_.GetRd());
@@ -113,7 +113,7 @@ absl::Status InstrDecoder::DecodeITypeInstr() {
     // same func3 encoding, so must also peek at func7.
     if (func7 == /*srl instr. func7 encoding=*/0) {
       alu_sel_ = AluOp::kSrl;
-    } else if (func7_imm == /*sra instr. func7 encoding=*/0b0100000) {
+    } else if (func7 == /*sra instr. func7 encoding=*/0b0100000) {
       alu_sel_ = AluOp::kSra;
     } else {
       return absl::InvalidArgumentError("Invalid func7 encoding");
@@ -322,7 +322,7 @@ absl::Status InstrDecoder::DecodeJalrTypeInstr() {
   reg_write_en_ = (rd != 0) ? true : false;
   wb_sel_ = WbSel::kPcPlus4;
   imm_sel_ = imm::ImmSel::kIType;
-  alu_sel_ = AluOp::kAdd;
+  alu_sel_ = AluOp::kAddAddr;
   mem_op_ = MemOp::kNone;
   return absl::OkStatus();
 }
@@ -361,11 +361,14 @@ absl::Status InstrDecoder::DecodeETypeInstr() {
 absl::Status InstrDecoder::Decode(const logic::Wire instr) {
   instr_ = instr;
   absl::StatusOr<const logic::Opcode> opcode = instr.GetOpcode();
-  if (absl::IsNotFound(opcode.status())) {
-    return absl::InvalidArgumentError("illegal instruction found");
+  if (!opcode.ok()) {
+    if (absl::IsNotFound(opcode.status())) {
+      return absl::InvalidArgumentError("illegal instruction found");
+    }
+    return opcode.status();
   }
 
-  switch (opcode) {
+  switch (*opcode) {
    case logic::Opcode::kRType:
     return DecodeRTypeInstr();
    case logic::Opcode::kIType:

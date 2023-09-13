@@ -21,7 +21,7 @@ class Cpu final {
   Alu alu_;
   memory::Dram dmem_;
   memory::Dram imem_;
-  InstrDecoder decoder_;
+  decoder::InstrDecoder decoder_;
 
   logic::Wire alu_out_;
   logic::Wire mem_out_;

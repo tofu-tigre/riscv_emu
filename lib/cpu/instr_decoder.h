@@ -69,17 +69,17 @@ class InstrDecoder final {
   
 
  private:
-  absl::Status DecodeRTypeInstr(logic::Wire instr);
-  absl::Status DecodeITypeInstr(logic::Wire instr);
-  absl::Status DecodeILTypeInstr(logic::Wire instr);
-  absl::Status DecodeSTypeInstr(const logic::Wire instr);
-  absl::Status DecodeBTypeInstr(const logic::Wire instr);
-  absl::Status DecodeLuiTypeInstr(const logic::Wire instr);
-  absl::Status DecodeAuiPcTypeInstr(const logic::Wire instr);
-  absl::Status DecodeJalTypeInstr(const logic::Wire instr);
-  absl::Status DecodeJalrTypeInstr(const logic::Wire instr);
-  absl::Status DecodeFenceTypeInstr(const logic::Wire instr);
-  absl::Status DecodeETypeInstr(const logic::Wire instr);
+  absl::Status DecodeRTypeInstr();
+  absl::Status DecodeITypeInstr();
+  absl::Status DecodeILTypeInstr();
+  absl::Status DecodeSTypeInstr();
+  absl::Status DecodeBTypeInstr();
+  absl::Status DecodeLuiTypeInstr();
+  absl::Status DecodeAuiPcTypeInstr();
+  absl::Status DecodeJalTypeInstr();
+  absl::Status DecodeJalrTypeInstr();
+  absl::Status DecodeFenceTypeInstr();
+  absl::Status DecodeETypeInstr();
 
   bool is_invalid_instr_ = false;
   logic::Wire instr_;
@@ -88,10 +88,10 @@ class InstrDecoder final {
   logic::Wire rd_sel_;
   logic::Opcode op_;
   PcSel pc_sel_ = PcSel::kPcPlus4;
-  imm::ImmSel imm_sel_  = imm::ImmSel::kNone;
+  imm::ImmSel imm_sel_;
   bool reg_write_en_ = false;
   MemOp mem_op_ = MemOp::kNone;
-  memory::AccessType mem_sel_ = memory::AccessType::kNone;
+  memory::AccessType mem_sel_;
   ASel a_sel_ = ASel::kNone;
   BSel b_sel_ = BSel::kNone;
   AluOp alu_sel_ = AluOp::kNone;

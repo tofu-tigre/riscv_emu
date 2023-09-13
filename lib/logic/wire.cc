@@ -16,6 +16,7 @@ absl::StatusOr<bool> HasFunc3(const Opcode opcode) {
    case Opcode::kLType:
    case Opcode::kSType:
    case Opcode::kBType:
+   case Opcode::kEType:
     return true;
    case Opcode::kLuiType:
    case Opcode::kAuiPcType:
@@ -77,7 +78,25 @@ absl::StatusOr<bool> HasRs2(const Opcode opcode) {
    case Opcode::kAuiPcType:
    case Opcode::kLuiType:
    case Opcode::kJalType:
+    return false;
+   default:
+    return absl::InternalError("Invalid opcode found");
+  }
+}
+
+absl::StatusOr<bool> HasCsr(const Opcode opcode) {
+  switch (opcode) {
    case Opcode::kEType:
+    return true;
+   case Opcode::kRType:
+   case Opcode::kSType:
+   case Opcode::kBType:
+   case Opcode::kIType:
+   case Opcode::kLType:
+   case Opcode::kJalrType:
+   case Opcode::kAuiPcType:
+   case Opcode::kLuiType:
+   case Opcode::kJalType:
     return false;
    default:
     return absl::InternalError("Invalid opcode found");
@@ -135,8 +154,8 @@ absl::StatusOr<Opcode> Wire::GetOpcode() const {
 
 absl::StatusOr<uint32_t> Wire::GetFunc3() const {
   ASSIGN_OR_RETURN(const Opcode opcode, this->GetOpcode());
-  ASSIGN_OR_RETURN(const bool hasFunc3, HasFunc3(opcode));
-  if (!hasFunc3) {
+  ASSIGN_OR_RETURN(const bool has_func3, HasFunc3(opcode));
+  if (!has_func3) {
     return absl::NotFoundError("Instruction does not contain a func3 field");
   }
   return (value_.u32 & constants::kFunc3Mask) >> constants::kFunc3Shift;
@@ -144,17 +163,26 @@ absl::StatusOr<uint32_t> Wire::GetFunc3() const {
 
 absl::StatusOr<uint32_t> Wire::GetFunc7() const {
   ASSIGN_OR_RETURN(const Opcode opcode, this->GetOpcode());
-  ASSIGN_OR_RETURN(const bool hasFunc7, HasFunc7(opcode));
-  if (!hasFunc7) {
+  ASSIGN_OR_RETURN(const bool has_func7, HasFunc7(opcode));
+  if (!has_func7) {
     return absl::NotFoundError("Instruction does not contain a func7 field");
   }
   return (value_.u32 & constants::kFunc7Mask) >> constants::kFunc7Shift;
 }
 
+absl::StatusOr<uint32_t> Wire::GetCsr() const {
+  ASSIGN_OR_RETURN(const Opcode opcode, this->GetOpcode());
+  ASSIGN_OR_RETURN(const bool has_csr, HasCsr(opcode));
+  if (!has_csr) {
+    return absl::NotFoundError("Instruction does not contain a csr field");
+  }
+  return (value_.u32 & constants::kCsrMask) >> constants::kRs2Shift;
+}
+
 absl::StatusOr<uint32_t> Wire::GetRd() const {
   ASSIGN_OR_RETURN(const Opcode opcode, this->GetOpcode());
-  ASSIGN_OR_RETURN(const bool hasRd, HasRd(opcode));
-  if (!hasRd) {
+  ASSIGN_OR_RETURN(const bool has_rd, HasRd(opcode));
+  if (!has_rd) {
     return absl::NotFoundError("Instruction does not contain a rd field");
   }
   return (value_.u32 & constants::kRdMask) >> constants::kRdShift;
@@ -162,8 +190,8 @@ absl::StatusOr<uint32_t> Wire::GetRd() const {
 
 absl::StatusOr<uint32_t> Wire::GetRs1() const {
   ASSIGN_OR_RETURN(const Opcode opcode, this->GetOpcode());
-  ASSIGN_OR_RETURN(const bool hasRs1, HasRs1(opcode));
-  if (!hasRs1) {
+  ASSIGN_OR_RETURN(const bool has_rs1, HasRs1(opcode));
+  if (!has_rs1) {
     return absl::NotFoundError("Instruction does not contain a rs1 field");
   }
   return (value_.u32 & constants::kRs1Mask) >> constants::kRs1Shift;
@@ -171,8 +199,8 @@ absl::StatusOr<uint32_t> Wire::GetRs1() const {
 
 absl::StatusOr<uint32_t> Wire::GetRs2() const {
   ASSIGN_OR_RETURN(const Opcode opcode, this->GetOpcode());
-  ASSIGN_OR_RETURN(const bool hasRs2, HasRs2(opcode));
-  if (!hasRs2) {
+  ASSIGN_OR_RETURN(const bool has_rs2, HasRs2(opcode));
+  if (!has_rs2) {
     return absl::NotFoundError("Instruction does not contain a rs2 field");
   }
   return (value_.u32 & constants::kRs2Mask) >> constants::kRs2Shift;

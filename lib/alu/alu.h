@@ -15,6 +15,7 @@ namespace riscv_emu {
 enum class AluOp {
   kBCopy = 0b11111,
   kAdd = 0b000,
+  kAddAddr = 0b10111,
   kSub = 0b1010, // Same as below, DO NOT USE.
   kOr  = 0b110,
   kAnd = 0b111,

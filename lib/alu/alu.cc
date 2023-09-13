@@ -92,6 +92,9 @@ namespace riscv_emu {
      case AluOp::kAdd:
       output = Add(val1, val2, &hasOverflow);
       break;
+     case AluOp::kAddAddr:
+      output = Add(val1, logic::Wire(val2.GetUnsigned() ^ 0b1), &hasOverflow);
+      break;
      case AluOp::kSub:
       output = Sub(val1, val2, &hasOverflow);
       break;
