@@ -37,6 +37,12 @@ enum class MemOp {
     kNone,
 };
 
+enum class ESel {
+    kEBreak,
+    kECall,
+    kNone,
+};
+
 class InstrDecoder final {
  public:
   absl::Status Decode(logic::Wire instr);
@@ -54,6 +60,7 @@ class InstrDecoder final {
   inline WbSel GetWbSel() const { return wb_sel_; }
   inline MemOp GetMemOp() const { return mem_op_; }
   inline bool IsBranchUnsigned() const { return is_branch_unsigned_; }
+  inline ESel GetESel() const { return e_sel_; }
   
 
  private:
@@ -67,6 +74,7 @@ class InstrDecoder final {
   absl::Status DecodeJalTypeInstr(const logic::Wire instr);
   absl::Status DecodeJalrTypeInstr(const logic::Wire instr);
   absl::Status DecodeFenceTypeInstr(const logic::Wire instr);
+  absl::Status DecodeETypeInstr(const logic::Wire instr);
 
   bool is_invalid_instr_;
   logic::Wire instr_;
@@ -84,6 +92,7 @@ class InstrDecoder final {
   AluOp alu_sel_;
   WbSel wb_sel_;
   bool is_branch_unsigned_;
+  ESel e_sel_ = ESel::kNone;
 
 };
 

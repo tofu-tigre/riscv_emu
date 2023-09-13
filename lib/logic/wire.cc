@@ -38,6 +38,7 @@ namespace riscv_emu::logic {
        case Opcode::kBType:
        case Opcode::kAuiPcType:
        case Opcode::kLuiType:
+       case Opcode::kEType:
        case Opcode::kJalType:
         return false;
        default:
@@ -70,6 +71,7 @@ namespace riscv_emu::logic {
        case Opcode::kRType:
        case Opcode::kSType:
        case Opcode::kBType:
+       case Opcode::kEType:
         return true;
        case Opcode::kIType:
        case Opcode::kLType:
@@ -126,6 +128,8 @@ namespace riscv_emu::logic {
       return Opcode::kJalrType;
      case static_cast<uint32_t>(Opcode::kLType):
       return Opcode::kLType;
+     case static_cast<uint32_t>(Opcode::kEType):
+      return Opcode::kEType;
      default:
       return absl::InvalidArgumentError("No opcode found");
     }

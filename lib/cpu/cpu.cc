@@ -40,10 +40,10 @@ namespace riscv_emu {
   }  // namespace
 
 Cpu::Cpu() {
-  pc_.SetIn(logic::Wire(0x8000U - 0x4U));
+  pc_.SetIn(logic::Wire(0x800U - 0x4U));
   imem_.SetAccessType(memory::AccessType::kWord);
-  if (!imem_.Flash("/home/jaeden/projects/riscv_emu/test_progs/bin/fib.bin", 0x8000).ok()) {
-    LOG(FATAL) << imem_.Flash("/projects/riscv_emu/test_progs/bin/fib.bin", 0x8000);
+  if (!imem_.Flash("/tmp/progs/fib.o", 0x800).ok()) {
+    LOG(FATAL) << "Something happened";
   }
   LOG(INFO) << "0x800: " << std::hex << imem_.Read(0x8000U).value().GetUnsigned();
   // imem_.Write(0x8000U, logic::Wire(0x00a00093)).IgnoreError();  // addi x1, x0, 10
@@ -79,6 +79,11 @@ absl::Status Cpu::Fetch() {
 absl::Status Cpu::Decode() {
   VLOG(4) << "Decoding instruction: " << std::hex << instr_.GetOut().GetUnsigned();
   RETURN_IF_ERROR(decoder_.Decode(instr_.GetOut()));
+
+  if(decoder_.GetESel() == ESel::kEBreak) {
+    power_is_on_ = false;
+  }
+
   ASSIGN_OR_RETURN(const logic::Wire rs1_out, GetRegister(registers_, decoder_.GetRs1().GetUnsigned()));
   ASSIGN_OR_RETURN(const logic::Wire rs2_out, GetRegister(registers_, decoder_.GetRs2().GetUnsigned()));
 
@@ -90,7 +95,8 @@ absl::Status Cpu::Decode() {
     a_out_ = pc_.GetOut();
     break;
    default:
-    return absl::InternalError("Invalid A-sel detected");
+    // return absl::InternalError("Invalid A-sel detected");
+    break;
   }
   absl::StatusOr<logic::Wire> immediate;
   switch (decoder_.GetBSel()) {
@@ -185,7 +191,6 @@ absl::Status Cpu::Boot() {
     RETURN_IF_ERROR(Writeback());
     PrintRegisters(registers_);
   }
-
   return absl::OkStatus();
 }
 

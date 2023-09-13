@@ -336,6 +336,28 @@ absl::Status InstrDecoder::DecodeFenceTypeInstr(const logic::Wire instr) {
   return absl::OkStatus();
 }
 
+absl::Status InstrDecoder::DecodeETypeInstr(const logic::Wire instr) {
+  VLOG(5) << "Decoding E-type instruction";
+  op_ = logic::Opcode::kEType;
+  pc_sel_ = PcSel::kPcPlus4;
+  reg_write_en_ = false;
+  mem_op_ = MemOp::kNone;
+
+  ASSIGN_OR_RETURN(const uint32_t sel, instr.GetRs2());
+  LOG(INFO) << "FUNC7: " << sel;
+  switch (sel) {
+   case 0b1:  // ebreak
+    e_sel_ = ESel::kEBreak;
+    break;
+   case 0b0:
+    e_sel_ = ESel::kECall;
+    break;
+   default:
+    return absl::InternalError("invalid system call");
+  }
+  return absl::OkStatus();
+}
+
 absl::Status InstrDecoder::Decode(const logic::Wire instr) {
   instr_ = instr;
   ASSIGN_OR_RETURN(const logic::Opcode opcode, instr.GetOpcode());
@@ -360,6 +382,8 @@ absl::Status InstrDecoder::Decode(const logic::Wire instr) {
     return DecodeJalrTypeInstr(instr);
    case logic::Opcode::kFenceType:
     return DecodeFenceTypeInstr(instr);
+   case logic::Opcode::kEType:
+    return DecodeETypeInstr(instr);
    default:
     return absl::InternalError("Instruction decoder detected invalid opcode");
   }
