@@ -94,7 +94,7 @@ absl::StatusOr<logic::Wire> Dram::Read(const size_t at_index) {
    case AccessType::kWord:
     return ReadWord(data_.get(), at_index);
    default:
-    return absl::InternalError("Dram access type not properly set.");
+    return absl::InternalError("Invalid DRAM access type");
   }
 }
 
@@ -104,7 +104,7 @@ absl::Status Dram::Write(const size_t at_index, const logic::Wire val) {
   }
   ASSIGN_OR_RETURN(const bool isUnaligned, IsUnalignedAccess(access_type_, at_index));
   if (isUnaligned) {
-    return absl::FailedPreconditionError("Unaligned memory access detected");
+    return absl::FailedPreconditionError("Unaligned memory access");
   }
   switch (access_type_) {
    case AccessType::kByte:
@@ -119,7 +119,7 @@ absl::Status Dram::Write(const size_t at_index, const logic::Wire val) {
     WriteWord(data_.get(), at_index, val);
     return absl::OkStatus();
    default:
-    return absl::InternalError("`Dram access type not properly set.");
+    return absl::InternalError("Invalid DRAM access type");
   }
 }
 
@@ -132,7 +132,6 @@ absl::Status Dram::Flash(const absl::string_view filename, const size_t at) {
   size_t written = 0;
   char c = 0;
   while (input_file.get(c)) {
-    LOG(INFO) << "WRITING BYTE 0x" << std::hex << (uint32_t)c << " to mem at 0x" << (at + written);
     if ((at + written) >= constants::kDramSize) {
       return absl::OutOfRangeError("disk image is larger than memory available");
     }

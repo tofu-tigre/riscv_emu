@@ -66,52 +66,69 @@ absl::Status Cpu::Fetch() {
     pc_.SetIn(alu_out_);
     break;
    default:
-    return absl::InternalError("Invalid PC select detected");
+    return absl::InternalError("Invalid PC select");
   }
 
   VLOG(4) << "Fetching next instruction from PC: " << pc_.GetOut();
-  ASSIGN_OR_RETURN(logic::Wire instr, imem_.Read(pc_.GetOut().GetUnsigned()));
-  instr_.SetIn(instr);
-
+  absl::StatusOr<logic::Wire> instr = imem_.Read(pc_.GetOut());
+  if (!instr.ok()) {
+    if (absl::IsOutOfRange(instr.status())) {
+    // TODO: Raise exception and loop PC to addr. 0x0.
+    } else {
+      return instr.status();
+    }
+  }
+  
+  instr_.SetIn(*instr);
   return absl::OkStatus();
 }
 
 absl::Status Cpu::Decode() {
   VLOG(4) << "Decoding instruction: " << std::hex << instr_.GetOut().GetUnsigned();
   RETURN_IF_ERROR(decoder_.Decode(instr_.GetOut()));
-
+  absl::Status decoder_status = decoder_.Decode(instr_.GetOut());
+  if (!decoder_status.ok()) {
+    if (absl::IsInvalidArgument(decoder_status)) {
+      // TODO: Raise exception.
+    } else {
+      return decoder_status;
+    }
+  }
   if(decoder_.GetESel() == ESel::kEBreak) {
     power_is_on_ = false;
   }
-
   ASSIGN_OR_RETURN(const logic::Wire rs1_out, GetRegister(registers_, decoder_.GetRs1().GetUnsigned()));
   ASSIGN_OR_RETURN(const logic::Wire rs2_out, GetRegister(registers_, decoder_.GetRs2().GetUnsigned()));
 
   switch (decoder_.GetASel()) {
-   case ASel::kRegOut:
+   case decoder::ASel::kRegOut:
     a_out_ = rs1_out;
     break;
-   case ASel::kPcOut:
+   case decoder::ASel::kPcOut:
     a_out_ = pc_.GetOut();
     break;
+   case decoder::ASel::kNone:
+    break;
    default:
-    // return absl::InternalError("Invalid A-sel detected");
+    return absl::InternalError("Invalid A-sel");
     break;
   }
   absl::StatusOr<logic::Wire> immediate;
   switch (decoder_.GetBSel()) {
-   case BSel::kRegOut:
+   case decoder::BSel::kRegOut:
     b_out_ = rs2_out;
     break;
-   case BSel::kImmOut:
+   case decoder::BSel::kImmOut:
     immediate = imm::DecodeImm(decoder_.GetImmSel(), instr_.GetOut());
     if (!immediate.ok()) {
       return immediate.status();
     }
     b_out_ = *immediate;
     break;
+   case decoder::BSel::kNone:
+    break;
    default:
-    return absl::InternalError("Invalid A-sel detected");
+    return absl::InternalError("Invalid B-sel");
   }
   return absl::OkStatus();
 }
@@ -119,8 +136,8 @@ absl::Status Cpu::Decode() {
 absl::Status Cpu::Execute() {
   VLOG(4) << "Executing instruction: " << instr_.GetOut();
 
-  ASSIGN_OR_RETURN(const logic::Wire rs1_out, GetRegister(registers_, decoder_.GetRs1().GetUnsigned()));
-  ASSIGN_OR_RETURN(const logic::Wire rs2_out, GetRegister(registers_, decoder_.GetRs2().GetUnsigned()));
+  ASSIGN_OR_RETURN(const logic::Wire rs1_out, GetRegister(registers_, decoder_.GetRs1()));
+  ASSIGN_OR_RETURN(const logic::Wire rs2_out, GetRegister(registers_, decoder_.GetRs2()));
   const branch::ComparisonResult res = branch::DoBranchComp(decoder_.IsBranchUnsigned(), rs1_out, rs2_out);
   RETURN_IF_ERROR(decoder_.SetBranchComp(res));
 
@@ -133,7 +150,7 @@ absl::Status Cpu::Execute() {
 
 absl::Status Cpu::Memory() {
   dmem_.SetAccessType(decoder_.GetMemSel());
-  ASSIGN_OR_RETURN(const logic::Wire rs2_out, GetRegister(registers_, decoder_.GetRs2().GetUnsigned()));
+  ASSIGN_OR_RETURN(const logic::Wire rs2_out, GetRegister(registers_, decoder_.GetRs2()));
   absl::StatusOr<logic::Wire> mem_out;
   absl::Status mem_write_status;
   switch (decoder_.GetMemOp()) {
@@ -141,6 +158,13 @@ absl::Status Cpu::Memory() {
     break;
    case MemOp::kRead:
     mem_out = dmem_.Read(alu_out_.GetUnsigned());
+    if (!mem_out.ok()) {
+      if (absl::IsOutOfRange(mem_out.status())) {
+        // TODO: raise a bus error exception.
+        break;
+      }
+      return mem_out.status();
+    }
     if (!mem_out.ok()) {
       return mem_out.status();
     }

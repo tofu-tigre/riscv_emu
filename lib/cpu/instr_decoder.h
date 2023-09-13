@@ -8,27 +8,32 @@
 #include "lib/branch_cmp/branch_cmp.h"
 #include "absl/status/status.h"
 
-namespace riscv_emu {
+namespace riscv_emu::decoder {
 
 enum class PcSel {
     kPcPlus4,
     kAluOut,
+    // No `kNone` field since pc select
+    // should ALWAYS be specified.
 };
 
 enum class WbSel {
     kMemOut,
     kAluOut,
     kPcPlus4,
+    kNone,
 };
 
 enum class ASel {
     kPcOut,
     kRegOut,
+    kNone,
 };
 
 enum class BSel {
     kImmOut,
     kRegOut,
+    kNone,
 };
 
 enum class MemOp {
@@ -76,26 +81,26 @@ class InstrDecoder final {
   absl::Status DecodeFenceTypeInstr(const logic::Wire instr);
   absl::Status DecodeETypeInstr(const logic::Wire instr);
 
-  bool is_invalid_instr_;
+  bool is_invalid_instr_ = false;
   logic::Wire instr_;
-  memory::AccessType mem_sel_;
   logic::Wire rs1_sel_;
   logic::Wire rs2_sel_;
   logic::Wire rd_sel_;
   logic::Opcode op_;
   PcSel pc_sel_ = PcSel::kPcPlus4;
-  imm::ImmSel imm_sel_;
-  bool reg_write_en_;
-  MemOp mem_op_;
-  ASel a_sel_;
-  BSel b_sel_;
-  AluOp alu_sel_;
-  WbSel wb_sel_;
+  imm::ImmSel imm_sel_  = imm::ImmSel::kNone;
+  bool reg_write_en_ = false;
+  MemOp mem_op_ = MemOp::kNone;
+  memory::AccessType mem_sel_ = memory::AccessType::kNone;
+  ASel a_sel_ = ASel::kNone;
+  BSel b_sel_ = BSel::kNone;
+  AluOp alu_sel_ = AluOp::kNone;
+  WbSel wb_sel_ = WbSel::kNone;
   bool is_branch_unsigned_;
   ESel e_sel_ = ESel::kNone;
 
 };
 
-}  // namespace riscv_emu
+}  // namespace riscv_emu::decoder
 
 #endif  // LIB_CPU_INSTR_DECODER_H

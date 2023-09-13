@@ -23,6 +23,7 @@ enum class AluOp {
   kSra = 0b101,   // Shift right arithmetic
   kSrl = 0b1111,  // Shift right logical. Note that this is actually the same value as `kSra`
                   // but due to compiler constraints must be a different value. DO NOT USE.
+  kNone,
 };
 
 class Alu final {

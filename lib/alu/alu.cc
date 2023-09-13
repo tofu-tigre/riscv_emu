@@ -113,8 +113,10 @@ namespace riscv_emu {
      case AluOp::kSrl:
       output =  Srl(val1, val2, &hasOverflow);
       break;
+     case AluOp::kNone:
+      break;
      default:
-      return absl::InvalidArgumentError("Invalid ALU operation");
+      return absl::InternalError("Invalid ALU operation");
     }
     if (!output.ok()) {
       return output;

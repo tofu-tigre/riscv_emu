@@ -7,7 +7,7 @@ namespace riscv_emu::logic {
 
 namespace constants {
 
-  constexpr uint32_t kOpcodeMask = 0b1111111;
+constexpr uint32_t kOpcodeMask = 0b1111111;
 
 }  // namespace constants
 
