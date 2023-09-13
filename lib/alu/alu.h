@@ -1,6 +1,7 @@
 #ifndef LIB_ALU_ALU_H
 #define LIB_ALU_ALU_H
 
+#include <cstdint>
 #include "lib/logic/wire.h"
 #include "absl/status/statusor.h"
 
@@ -33,7 +34,7 @@ class Alu final {
 
  public:
   Alu() : hasOverflow_(false) {}
-  absl::StatusOr<logic::Wire> DoOp(AluOp op, logic::Wire val1, logic::Wire val2);
+  absl::StatusOr<uint32_t> DoOp(AluOp op, uint32_t val1, uint32_t val2);
 
 
 };

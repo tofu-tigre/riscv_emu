@@ -1,6 +1,7 @@
 #ifndef LIB_BRANCH_CMP_BRANCH_CMP_H
 #define LIB_BRANCH_CMP_BRANCH_CMP_H
 
+#include <cstdint>
 #include "lib/logic/wire.h"
 
 namespace riscv_emu::branch {
@@ -19,7 +20,7 @@ struct ComparisonResult {
     bool branch_lt_;
 };
 
-ComparisonResult DoBranchComp(bool is_unsigned, logic::Wire val1, logic::Wire val2);
+ComparisonResult DoBranchComp(bool is_unsigned, uint32_t val1, uint32_t val2);
 
 }  // namespace riscv_emu::branch
 

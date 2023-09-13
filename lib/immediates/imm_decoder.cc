@@ -4,66 +4,66 @@
 
 namespace riscv_emu::imm {
 
-  namespace {
+namespace {
 
-    logic::Wire DecodeITypeImm(const logic::Wire input) {
-      uint32_t output = (input.GetUnsigned() & constants::kITypeImmMask) >> constants::kITypeImmShift;
-      if (output & (1 << constants::kITypeImmSignedBit)) {
-        output |= constants::kITypeImmSignExtMask;
-      }
-      return logic::Wire(output);
-    }
+uint32_t DecodeITypeImm(const uint32_t input) {
+  uint32_t output = (input & constants::kITypeImmMask) >> constants::kITypeImmShift;
+  if (output & (1 << constants::kITypeImmSignedBit)) {
+    output |= constants::kITypeImmSignExtMask;
+  }
+  return output;
+}
 
-    logic::Wire DecodeSTypeImm(const logic::Wire input) {
-      const uint32_t valUpper = (input.GetUnsigned() & constants::kSTypeUpperImmMask) >> constants::kSTypeUpperImmShift;
-      const uint32_t valLower = (input.GetUnsigned() & constants::kSTypeLowerImmMask) >> constants::kSTypeLowerImmShift;
-      uint32_t output = (valUpper << constants::kSTypeUpperImmCombinedShift) | valLower;
-      if (output & (1 << constants::kSTypeImmSignedBit)) {
-        output |= constants::kSTypeImmSignExtMask;
-      }
-      return logic::Wire(output);
-    }
+uint32_t DecodeSTypeImm(const uint32_t input) {
+  const uint32_t valUpper = (input & constants::kSTypeUpperImmMask) >> constants::kSTypeUpperImmShift;
+  const uint32_t valLower = (input & constants::kSTypeLowerImmMask) >> constants::kSTypeLowerImmShift;
+  uint32_t output = (valUpper << constants::kSTypeUpperImmCombinedShift) | valLower;
+  if (output & (1 << constants::kSTypeImmSignedBit)) {
+    output |= constants::kSTypeImmSignExtMask;
+  }
+  return output;
+}
 
-    logic::Wire DecodeBTypeImm(const logic::Wire input) {
-      const uint32_t valUpper = (input.GetUnsigned() & constants::kBTypeUpperImmMask) >> constants::kBTypeUpperImmShift;
-      const uint32_t valUpperMiddle = (input.GetUnsigned() & constants::kBTypeUpperMiddleImmMask) >> constants::kBTypeUpperMiddleImmShift;
-      const uint32_t valLowerMiddle = (input.GetUnsigned() & constants::kBTypeLowerMiddleImmMask) >> constants::kBTypeLowerMiddleImmShift;
-      // B-type immediates have lowest bit == 0.
-      const uint32_t valLower = (input.GetUnsigned() & constants::kBTypeLowerImmMask) >> (constants::kBTypeLowerImmShift - 1);
-      uint32_t output = (valUpper << constants::kBTypeUpperImmCombinedShift) |
-                     (valUpperMiddle << constants::kBTypeUpperMiddleImmCombinedShift) |
-                     (valLowerMiddle << constants::kBTypeLowerMiddleImmCombinedShift) |
-                     valLower;
-      if (output & (1 << constants::kBTypeImmSignedBit)) {
-        output |= constants::kBTypeImmSignExtMask;
-      }
-      return logic::Wire(output);
-    }
+uint32_t DecodeBTypeImm(const uint32_t input) {
+  const uint32_t valUpper = (input & constants::kBTypeUpperImmMask) >> constants::kBTypeUpperImmShift;
+  const uint32_t valUpperMiddle = (input & constants::kBTypeUpperMiddleImmMask) >> constants::kBTypeUpperMiddleImmShift;
+  const uint32_t valLowerMiddle = (input & constants::kBTypeLowerMiddleImmMask) >> constants::kBTypeLowerMiddleImmShift;
+  // B-type immediates have lowest bit == 0.
+  const uint32_t valLower = (input & constants::kBTypeLowerImmMask) >> (constants::kBTypeLowerImmShift - 1);
+  uint32_t output = (valUpper << constants::kBTypeUpperImmCombinedShift) |
+                  (valUpperMiddle << constants::kBTypeUpperMiddleImmCombinedShift) |
+                  (valLowerMiddle << constants::kBTypeLowerMiddleImmCombinedShift) |
+                  valLower;
+  if (output & (1 << constants::kBTypeImmSignedBit)) {
+    output |= constants::kBTypeImmSignExtMask;
+  }
+  return output;
+}
 
-    logic::Wire DecodeUTypeImm(const logic::Wire input) {
-      uint32_t output = input.GetUnsigned() & constants::kUTypeImmMask;
-      return logic::Wire(output);
-    }
+uint32_t DecodeUTypeImm(const uint32_t input) {
+  uint32_t output = input & constants::kUTypeImmMask;
+  return output;
+}
 
-    logic::Wire DecodeJTypeImm(const logic::Wire input) {
-      const uint32_t valUpper = (input.GetUnsigned() & constants::kJTypeUpperImmMask) >> constants::kJTypeUpperImmShift;
-      const uint32_t valUpperMiddle = (input.GetUnsigned() & constants::kJTypeUpperMiddleImmMask) >> constants::kJTypeUpperMiddleImmShift;
-      const uint32_t valLowerMiddle = (input.GetUnsigned() & constants::kJTypeLowerMiddleImmMask) >> constants::kJTypeLowerMiddleImmShift;
-      // J-type immediates have lowest bit == 0.
-      const uint32_t valLower = (input.GetUnsigned() & constants::kJTypeLowerImmMask) >> (constants::kJTypeLowerImmShift - 1);
-      uint32_t output = (valUpper << constants::kJTypeUpperImmCombinedShift) |
-                     (valUpperMiddle << constants::kJTypeUpperMiddleImmCombinedShift) |
-                     (valLowerMiddle << constants::kJTypeLowerMiddleImmCombinedShift) |
-                     valLower;
-      if (output & (1 << constants::kJTypeImmSignedBit)) {
-        output |= constants::kJTypeImmSignExtMask;
-      }
-      return logic::Wire(output);
-    }
+uint32_t DecodeJTypeImm(const uint32_t input) {
+  const uint32_t valUpper = (input & constants::kJTypeUpperImmMask) >> constants::kJTypeUpperImmShift;
+  const uint32_t valUpperMiddle = (input & constants::kJTypeUpperMiddleImmMask) >> constants::kJTypeUpperMiddleImmShift;
+  const uint32_t valLowerMiddle = (input & constants::kJTypeLowerMiddleImmMask) >> constants::kJTypeLowerMiddleImmShift;
+  // J-type immediates have lowest bit == 0.
+  const uint32_t valLower = (input & constants::kJTypeLowerImmMask) >> (constants::kJTypeLowerImmShift - 1);
+  uint32_t output = (valUpper << constants::kJTypeUpperImmCombinedShift) |
+                  (valUpperMiddle << constants::kJTypeUpperMiddleImmCombinedShift) |
+                  (valLowerMiddle << constants::kJTypeLowerMiddleImmCombinedShift) |
+                  valLower;
+  if (output & (1 << constants::kJTypeImmSignedBit)) {
+    output |= constants::kJTypeImmSignExtMask;
+  }
+  return output;
+}
 
-  }  // namespace
+}  // namespace
 
-absl::StatusOr<logic::Wire> DecodeImm(const ImmSel imm_sel, const logic::Wire input) {
+absl::StatusOr<uint32_t> DecodeImm(const ImmSel imm_sel, const uint32_t input) {
   switch(imm_sel) {
    case ImmSel::kIType:
     return DecodeITypeImm(input);

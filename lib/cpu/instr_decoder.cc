@@ -7,12 +7,9 @@ namespace riscv_emu::decoder {
 absl::Status InstrDecoder::DecodeRTypeInstr() {
   VLOG(5) << "Decoding R-type instruction";
   // Set register selects.
-  ASSIGN_OR_RETURN(const uint32_t rs1, instr_.GetRs1());
-  ASSIGN_OR_RETURN(const uint32_t rs2, instr_.GetRs2());
-  ASSIGN_OR_RETURN(const uint32_t rd, instr_.GetRd());
-  rs1_sel_ = logic::Wire(rs1);
-  rs2_sel_ = logic::Wire(rs2);
-  rd_sel_ = logic::Wire(rd);
+  ASSIGN_OR_RETURN(rs1_sel_, logic::GetRs1(instr_));
+  ASSIGN_OR_RETURN(rs2_sel_, logic::GetRs2(instr_));
+  ASSIGN_OR_RETURN(rd_sel_, logic::GetRd(instr_));
 
   // Set selects.
   op_ = logic::Opcode::kRType;
@@ -20,12 +17,12 @@ absl::Status InstrDecoder::DecodeRTypeInstr() {
   a_sel_ = ASel::kRegOut;
   wb_sel_ = WbSel::kAluOut;
   pc_sel_ = PcSel::kPcPlus4;
-  reg_write_en_ = (rd != 0) ? true : false;
+  reg_write_en_ = (rd_sel_ != 0) ? true : false;
   mem_op_ = MemOp::kNone;
 
   // Set ALU.
-  ASSIGN_OR_RETURN(const uint32_t func3, instr_.GetFunc3());
-  ASSIGN_OR_RETURN(const uint32_t func7, instr_.GetFunc7());
+  ASSIGN_OR_RETURN(const uint32_t func3, logic::GetFunc3(instr_));
+  ASSIGN_OR_RETURN(const uint32_t func7, logic::GetFunc7(instr_));
   switch (func3) {
    case static_cast<uint32_t>(AluOp::kAdd):
    // case static_cast<uint32_t>(AluOp::kSub): not needed but left for clarity.
@@ -70,12 +67,10 @@ absl::Status InstrDecoder::DecodeRTypeInstr() {
 }
 
 absl::Status InstrDecoder::DecodeITypeInstr() {
-  VLOG(5) << "Decoding I-type instruction" << instr_;
+  VLOG(5) << "Decoding I-type instruction";
   // Set register selects.
-  ASSIGN_OR_RETURN(const uint32_t rs1, instr_.GetRs1());
-  ASSIGN_OR_RETURN(const uint32_t rd, instr_.GetRd());
-  rs1_sel_ = logic::Wire(rs1);
-  rd_sel_ = logic::Wire(rd);
+  ASSIGN_OR_RETURN(rs1_sel_, logic::GetRs1(instr_));
+  ASSIGN_OR_RETURN(rd_sel_, logic::GetRd(instr_));
 
   // Set selects.
   op_ = logic::Opcode::kIType;
@@ -83,14 +78,14 @@ absl::Status InstrDecoder::DecodeITypeInstr() {
   a_sel_ = ASel::kRegOut;
   wb_sel_ = WbSel::kAluOut;
   pc_sel_ = PcSel::kPcPlus4;
-  reg_write_en_ = (rd != 0) ? true : false;
+  reg_write_en_ = (rd_sel_ != 0) ? true : false;
   imm_sel_ = imm::ImmSel::kIType;
   mem_op_ = MemOp::kNone;
 
 
   // Set ALU.
-  ASSIGN_OR_RETURN(const uint32_t func3, instr_.GetFunc3());
-  ASSIGN_OR_RETURN(const uint32_t func7, instr_.GetFunc7());
+  ASSIGN_OR_RETURN(const uint32_t func3, logic::GetFunc3(instr_));
+  ASSIGN_OR_RETURN(const uint32_t func7, logic::GetFunc7(instr_));
   switch (func3) {
    case static_cast<uint32_t>(AluOp::kAdd):
     alu_sel_ = AluOp::kAdd;
@@ -128,10 +123,8 @@ absl::Status InstrDecoder::DecodeITypeInstr() {
 absl::Status InstrDecoder::DecodeILTypeInstr() {
   VLOG(5) << "Decoding I-type instruction (load)";
   // Set register selects.
-  ASSIGN_OR_RETURN(const uint32_t rs1, instr_.GetRs1());
-  ASSIGN_OR_RETURN(const uint32_t rd, instr_.GetRd());
-  rs1_sel_ = logic::Wire(rs1);
-  rd_sel_ = logic::Wire(rd);
+  ASSIGN_OR_RETURN(rs1_sel_, logic::GetRs1(instr_));
+  ASSIGN_OR_RETURN(rd_sel_, logic::GetRd(instr_));
 
   // Set selects.
   op_ = logic::Opcode::kLType;
@@ -139,13 +132,13 @@ absl::Status InstrDecoder::DecodeILTypeInstr() {
   a_sel_ = ASel::kRegOut;
   wb_sel_ = WbSel::kMemOut;
   pc_sel_ = PcSel::kPcPlus4;
-  reg_write_en_ = (rd != 0) ? true : false;
+  reg_write_en_ = (rd_sel_ != 0) ? true : false;
   imm_sel_ = imm::ImmSel::kIType;
   alu_sel_ = AluOp::kAdd;
   mem_op_ = MemOp::kRead;
 
   // Set ALU.
-  ASSIGN_OR_RETURN(const uint32_t func3, instr_.GetFunc3());
+  ASSIGN_OR_RETURN(const uint32_t func3, logic::GetFunc3(instr_));
   switch (func3) {
    case static_cast<uint32_t>(memory::AccessType::kByte):
     mem_sel_ = memory::AccessType::kByte;
@@ -171,10 +164,8 @@ absl::Status InstrDecoder::DecodeILTypeInstr() {
 absl::Status InstrDecoder::DecodeSTypeInstr() {
   VLOG(5) << "Decoding S-type instruction";
   // Set register selects.
-  ASSIGN_OR_RETURN(const uint32_t rs1, instr_.GetRs1());
-  ASSIGN_OR_RETURN(const uint32_t rs2, instr_.GetRs2());
-  rs1_sel_ = logic::Wire(rs1);
-  rs2_sel_ = logic::Wire(rs2);
+  ASSIGN_OR_RETURN(rs1_sel_, logic::GetRs1(instr_));
+  ASSIGN_OR_RETURN(rs2_sel_, logic::GetRs2(instr_));
 
   // Set selects.
   op_ = logic::Opcode::kSType;
@@ -187,7 +178,7 @@ absl::Status InstrDecoder::DecodeSTypeInstr() {
   mem_op_ = MemOp::kWrite;
 
   // Set ALU.
-  ASSIGN_OR_RETURN(const uint32_t func3, instr_.GetFunc3());
+  ASSIGN_OR_RETURN(const uint32_t func3, logic::GetFunc3(instr_));
   switch (func3) {
    case static_cast<uint32_t>(memory::AccessType::kByte):
     mem_sel_ = memory::AccessType::kByte;
@@ -207,10 +198,8 @@ absl::Status InstrDecoder::DecodeSTypeInstr() {
 absl::Status InstrDecoder::DecodeBTypeInstr() {
   VLOG(5) << "Decoding B-type instruction";
   // Set register selects.
-  ASSIGN_OR_RETURN(const uint32_t rs1, instr_.GetRs1());
-  ASSIGN_OR_RETURN(const uint32_t rs2, instr_.GetRs2());
-  rs1_sel_ = logic::Wire(rs1);
-  rs2_sel_ = logic::Wire(rs2);
+  ASSIGN_OR_RETURN(rs1_sel_, logic::GetRs1(instr_));
+  ASSIGN_OR_RETURN(rs2_sel_, logic::GetRs2(instr_));
 
   // Set selects.
   op_ = logic::Opcode::kBType;
@@ -229,7 +218,7 @@ absl::Status InstrDecoder::SetBranchComp(const branch::ComparisonResult result) 
   if (op_ != logic::Opcode::kBType) {
     return absl::OkStatus();
   }
-  const uint32_t func3 = instr_.GetFunc3().value();
+  const uint32_t func3 = logic::GetFunc3(instr_).value();
   switch (func3) {
    case static_cast<uint32_t>(branch::ComparisonType::kEqual):
     pc_sel_ = result.branch_eq_ ? PcSel::kAluOut : pc_sel_;
@@ -253,14 +242,13 @@ absl::Status InstrDecoder::SetBranchComp(const branch::ComparisonResult result) 
 absl::Status InstrDecoder::DecodeLuiTypeInstr() {
   VLOG(5) << "Decoding U-type instruction";
   // Set register selects.
-  ASSIGN_OR_RETURN(const uint32_t rd, instr_.GetRd());
-  rd_sel_ = logic::Wire(rd);
+  ASSIGN_OR_RETURN(rd_sel_, logic::GetRd(instr_));
 
   // Set selects.
   op_ = logic::Opcode::kLuiType;
   b_sel_ = BSel::kImmOut;
   pc_sel_ = PcSel::kPcPlus4;
-  reg_write_en_ = (rd != 0) ? true : false;
+  reg_write_en_ = (rd_sel_ != 0) ? true : false;
   wb_sel_ = WbSel::kAluOut;
   imm_sel_ = imm::ImmSel::kUType;
   alu_sel_ = AluOp::kBCopy;
@@ -271,15 +259,14 @@ absl::Status InstrDecoder::DecodeLuiTypeInstr() {
 absl::Status InstrDecoder::DecodeAuiPcTypeInstr() {
   VLOG(5) << "Decoding U-type instruction";
   // Set register selects.
-  ASSIGN_OR_RETURN(const uint32_t rd, instr_.GetRd());
-  rd_sel_ = logic::Wire(rd);
+  ASSIGN_OR_RETURN(rd_sel_, logic::GetRd(instr_));
 
   // Set selects.
   op_ = logic::Opcode::kAuiPcType;
   a_sel_ = ASel::kPcOut;
   b_sel_ = BSel::kImmOut;
   pc_sel_ = PcSel::kPcPlus4;
-  reg_write_en_ = (rd != 0) ? true : false;
+  reg_write_en_ = (rd_sel_ != 0) ? true : false;
   wb_sel_ = WbSel::kAluOut;
   imm_sel_ = imm::ImmSel::kUType;
   alu_sel_ = AluOp::kBCopy;
@@ -290,15 +277,14 @@ absl::Status InstrDecoder::DecodeAuiPcTypeInstr() {
 absl::Status InstrDecoder::DecodeJalTypeInstr() {
   VLOG(5) << "Decoding J-type instruction";
   // Set register selects.
-  ASSIGN_OR_RETURN(const uint32_t rd, instr_.GetRd());
-  rd_sel_ = logic::Wire(rd);
+  ASSIGN_OR_RETURN(rd_sel_, logic::GetRd(instr_));
 
   // Set selects.
   op_ = logic::Opcode::kJalType;
   a_sel_ = ASel::kPcOut;
   b_sel_ = BSel::kImmOut;
   pc_sel_ = PcSel::kAluOut;
-  reg_write_en_ = (rd != 0) ? true : false;
+  reg_write_en_ = (rd_sel_ != 0) ? true : false;
   wb_sel_ = WbSel::kPcPlus4;
   imm_sel_ = imm::ImmSel::kJType;
   alu_sel_ = AluOp::kAdd;
@@ -309,17 +295,15 @@ absl::Status InstrDecoder::DecodeJalTypeInstr() {
 absl::Status InstrDecoder::DecodeJalrTypeInstr() {
   VLOG(5) << "Decoding J-type instruction";
   // Set register selects.
-  ASSIGN_OR_RETURN(const uint32_t rs1, instr_.GetRs1());
-  ASSIGN_OR_RETURN(const uint32_t rd, instr_.GetRd());
-  rs1_sel_ = logic::Wire(rs1);
-  rd_sel_ = logic::Wire(rd);
+  ASSIGN_OR_RETURN(rs1_sel_, logic::GetRs1(instr_));
+  ASSIGN_OR_RETURN(rd_sel_, logic::GetRd(instr_));
 
   // Set selects.
   op_ = logic::Opcode::kJalrType;
   a_sel_ = ASel::kRegOut;
   b_sel_ = BSel::kImmOut;
   pc_sel_ = PcSel::kAluOut;
-  reg_write_en_ = (rd != 0) ? true : false;
+  reg_write_en_ = (rd_sel_ != 0) ? true : false;
   wb_sel_ = WbSel::kPcPlus4;
   imm_sel_ = imm::ImmSel::kIType;
   alu_sel_ = AluOp::kAddAddr;
@@ -343,7 +327,7 @@ absl::Status InstrDecoder::DecodeETypeInstr() {
   reg_write_en_ = false;
   mem_op_ = MemOp::kNone;
 
-  ASSIGN_OR_RETURN(const uint32_t sel, instr_.GetRs2());
+  ASSIGN_OR_RETURN(const uint32_t sel, logic::GetRs2(instr_));
   LOG(INFO) << "FUNC7: " << sel;
   switch (sel) {
    case 0b1:  // ebreak
@@ -358,9 +342,9 @@ absl::Status InstrDecoder::DecodeETypeInstr() {
   return absl::OkStatus();
 }
 
-absl::Status InstrDecoder::Decode(const logic::Wire instr) {
+absl::Status InstrDecoder::Decode(const uint32_t instr) {
   instr_ = instr;
-  absl::StatusOr<const logic::Opcode> opcode = instr.GetOpcode();
+  absl::StatusOr<const logic::Opcode> opcode = logic::GetOpcode(instr_);
   if (!opcode.ok()) {
     if (absl::IsNotFound(opcode.status())) {
       return absl::InvalidArgumentError("illegal instruction found");

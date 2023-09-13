@@ -1,7 +1,7 @@
 #ifndef LIB_MEMORY_DRAM_H
 #define LIB_MEMORY_DRAM_H
 
-#include <stdint.h>
+#include <cstdint>
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -29,9 +29,9 @@ class Dram final {
  public:
   // TODO: Consider including `AccessType` as an parameter?
   Dram();
-  absl::StatusOr<logic::Wire> Read(size_t at_index);
-  absl::Status Write(size_t at_index, logic::Wire val);
-  absl::Status Flash(absl::string_view filename, size_t at);
+  absl::StatusOr<uint32_t> Read(size_t at_index);
+  absl::Status Write(size_t at_index, uint32_t val);
+  absl::Status Flash(absl::string_view filename);
   inline void SetAccessType(const AccessType type) { access_type_ = type; }
 
  private:

@@ -1,6 +1,7 @@
 #ifndef LIB_IMMEDIATES_IMM_DECODER_H
 #define LIB_IMMEDIATES_IMM_DECODER_H
 
+#include <cstdint>
 #include "absl/status/statusor.h"
 #include "lib/logic/opcodes.h"
 #include "lib/logic/wire.h"
@@ -63,7 +64,7 @@ namespace riscv_emu::imm {
     kJType,
   };
 
-absl::StatusOr<logic::Wire> DecodeImm(ImmSel imm_sel, logic::Wire wire);
+absl::StatusOr<uint32_t> DecodeImm(ImmSel imm_sel, uint32_t wire);
 
 }  // namespace riscv_emu::imm
 

@@ -1,5 +1,6 @@
 #include "cpu.h"
 #include "status_macros.h"
+#include "absl/strings/str_cat.h"
 #include "absl/status/statusor.h"
 #include "lib/logic/wire.h"
 #include "lib/branch_cmp/branch_cmp.h"
@@ -9,35 +10,30 @@ namespace riscv_emu {
 
   namespace {
 
-    absl::StatusOr<logic::Wire> GetRegister(logic::Register registers[32], const size_t at_index) {
+    absl::StatusOr<uint32_t> GetRegister(uint32_t registers[32], const size_t at_index) {
       if (at_index > 31) {
-        return absl::OutOfRangeError("Cannot access register at index > 31");
+        const std::string error_str = absl::StrCat("Invalid register index ", at_index);
+        return absl::OutOfRangeError(error_str);
       }
-      return registers[at_index].GetOut();
+      return registers[at_index];
     }
 
-    absl::StatusOr<logic::Wire> GetRegister(logic::Register registers[32], const logic::Wire at_index) {
-      if (at_index.GetUnsigned() > 31) {
-        return absl::OutOfRangeError("Cannot access register at index > 31");
-      }
-      return registers[at_index.GetUnsigned()].GetOut();
-    }
-
-    absl::Status SetRegister(logic::Register registers[32], const size_t at_index, const logic::Wire val) {
+    absl::Status SetRegister(uint32_t registers[32], const size_t at_index, const uint32_t val) {
       if (at_index > 31) {
-        return absl::OutOfRangeError("Cannot access register at index > 31");
+        const std::string error_str = absl::StrCat("Invalid register index 0x", at_index);
+        return absl::OutOfRangeError(error_str);
       }
-      registers[at_index].SetIn(val);
+      registers[at_index] = val;
       return absl::OkStatus();
     }
 
-    void PrintRegisters(const logic::Register registers[32]) {
+    void PrintRegisters(uint32_t registers[32]) {
       VLOG(1) << "Register debug info:";
       for (int i = 0; i < 32; ++i) {
         if (i < 10) {
-          VLOG(1) << "0x0" << std::dec << i << ": " << std::hex << registers[i].GetOut().GetUnsigned() << std::endl;
+          VLOG(1) << "0x0" << std::dec << i << ": " << std::hex << registers[i] << std::endl;
         } else {
-          VLOG(2) << "0x" << std::dec << i << ": " << std::hex << registers[i].GetOut().GetUnsigned() << std::endl;
+          VLOG(2) << "0x" << std::dec << i << ": " << std::hex << registers[i] << std::endl;
         }
         
       }
@@ -47,36 +43,27 @@ namespace riscv_emu {
   }  // namespace
 
 Cpu::Cpu() {
-  pc_.SetIn(logic::Wire(0x800U - 0x4U));
   imem_.SetAccessType(memory::AccessType::kWord);
-  if (!imem_.Flash("/tmp/progs/foo.bin", 0x800).ok()) {
+  if (!imem_.Flash("/tmp/progs/foo.o").ok()) {
     LOG(FATAL) << "Something happened";
   }
-  // imem_.Write(0x8000U, logic::Wire(0x00a00093)).IgnoreError();  // addi x1, x0, 10
-  // imem_.Write(0x8004U, logic::Wire(0xfff08093)).IgnoreError();  // addi x1, x1, -1
-  // imem_.Write(0x8008U, logic::Wire(0xfe009ee3)).IgnoreError();  // bne x1, x0, -4
-  // imem_.Write(0x800cU, logic::Wire(0xdeadc137)).IgnoreError();  // lui x2, 0xdeadc
-  // imem_.Write(0x8010U, logic::Wire(0xeef10113)).IgnoreError();  // addi x2, x2, 0xeef
-  // imem_.Write(0x8014U, logic::Wire(0x004003ef)).IgnoreError();  // jal x7, 4
-  
-  
 
 }
 
 absl::Status Cpu::Fetch() {
   switch (decoder_.GetPcSel()) {
    case decoder::PcSel::kPcPlus4:
-    pc_.SetIn(logic::Wire(pc_.GetOut().GetUnsigned() + 4));
+    pc_ += 4;
     break;
    case decoder::PcSel::kAluOut:
-    pc_.SetIn(alu_out_);
+    pc_ = alu_out_;
     break;
    default:
     return absl::InternalError("Invalid PC select");
   }
 
-  VLOG(1) << "PC: 0x" << std::hex << pc_.GetOut().GetUnsigned();
-  absl::StatusOr<logic::Wire> instr = imem_.Read(pc_.GetOut().GetUnsigned());
+  VLOG(1) << "PC: 0x" << std::hex << pc_;
+  absl::StatusOr<uint32_t> instr = imem_.Read(pc_);
   if (!instr.ok()) {
     if (absl::IsOutOfRange(instr.status())) {
     // TODO: Raise exception and loop PC to addr. 0x0.
@@ -84,13 +71,13 @@ absl::Status Cpu::Fetch() {
       return instr.status();
     }
   }
-  VLOG(1) << "Instruction: 0x" << std::hex << instr->GetUnsigned();
-  instr_.SetIn(*instr);
+  VLOG(1) << "Instruction: 0x" << std::hex << *instr;
+  instr_ = *instr;
   return absl::OkStatus();
 }
 
 absl::Status Cpu::Decode() {
-  absl::Status decoder_status = decoder_.Decode(instr_.GetOut());
+  absl::Status decoder_status = decoder_.Decode(instr_);
   if (!decoder_status.ok()) {
     if (absl::IsInvalidArgument(decoder_status)) {
       // TODO: Raise exception.
@@ -103,15 +90,15 @@ absl::Status Cpu::Decode() {
   if(decoder_.GetESel() == decoder::ESel::kEBreak) {
     power_is_on_ = false;
   }
-  ASSIGN_OR_RETURN(const logic::Wire rs1_out, GetRegister(registers_, decoder_.GetRs1()));
-  ASSIGN_OR_RETURN(const logic::Wire rs2_out, GetRegister(registers_, decoder_.GetRs2()));
+  ASSIGN_OR_RETURN(const uint32_t rs1_out, GetRegister(registers_, decoder_.GetRs1()));
+  ASSIGN_OR_RETURN(const uint32_t rs2_out, GetRegister(registers_, decoder_.GetRs2()));
 
   switch (decoder_.GetASel()) {
    case decoder::ASel::kRegOut:
     a_out_ = rs1_out;
     break;
    case decoder::ASel::kPcOut:
-    a_out_ = pc_.GetOut();
+    a_out_ = pc_;
     break;
    case decoder::ASel::kNone:
     break;
@@ -119,13 +106,13 @@ absl::Status Cpu::Decode() {
     return absl::InternalError("Invalid A-sel");
     break;
   }
-  absl::StatusOr<logic::Wire> immediate;
+  absl::StatusOr<uint32_t> immediate;
   switch (decoder_.GetBSel()) {
    case decoder::BSel::kRegOut:
     b_out_ = rs2_out;
     break;
    case decoder::BSel::kImmOut:
-    immediate = imm::DecodeImm(decoder_.GetImmSel(), instr_.GetOut());
+    immediate = imm::DecodeImm(decoder_.GetImmSel(), instr_);
     if (!immediate.ok()) {
       return immediate.status();
     }
@@ -140,8 +127,8 @@ absl::Status Cpu::Decode() {
 }
 
 absl::Status Cpu::Execute() {
-  ASSIGN_OR_RETURN(const logic::Wire rs1_out, GetRegister(registers_, decoder_.GetRs1()));
-  ASSIGN_OR_RETURN(const logic::Wire rs2_out, GetRegister(registers_, decoder_.GetRs2()));
+  ASSIGN_OR_RETURN(const uint32_t rs1_out, GetRegister(registers_, decoder_.GetRs1()));
+  ASSIGN_OR_RETURN(const uint32_t rs2_out, GetRegister(registers_, decoder_.GetRs2()));
   const branch::ComparisonResult res = branch::DoBranchComp(decoder_.IsBranchUnsigned(), rs1_out, rs2_out);
   RETURN_IF_ERROR(decoder_.SetBranchComp(res));
 
@@ -151,14 +138,14 @@ absl::Status Cpu::Execute() {
 
 absl::Status Cpu::Memory() {
   dmem_.SetAccessType(decoder_.GetMemSel());
-  ASSIGN_OR_RETURN(const logic::Wire rs2_out, GetRegister(registers_, decoder_.GetRs2()));
-  absl::StatusOr<logic::Wire> mem_out;
+  ASSIGN_OR_RETURN(const uint32_t rs2_out, GetRegister(registers_, decoder_.GetRs2()));
+  absl::StatusOr<uint32_t> mem_out;
   absl::Status mem_write_status;
   switch (decoder_.GetMemOp()) {
    case decoder::MemOp::kNone:
     break;
    case decoder::MemOp::kRead:
-    mem_out = dmem_.Read(alu_out_.GetUnsigned());
+    mem_out = dmem_.Read(alu_out_);
     if (!mem_out.ok()) {
       if (absl::IsOutOfRange(mem_out.status())) {
         // TODO: Raise a bus error exception.
@@ -169,10 +156,11 @@ absl::Status Cpu::Memory() {
     mem_out_ = *mem_out;
     break;
    case decoder::MemOp::kWrite:
-    mem_write_status = dmem_.Write(alu_out_.GetUnsigned(), rs2_out);
+    mem_write_status = dmem_.Write(alu_out_, rs2_out);
     if (!mem_write_status.ok()) {
       if (absl::IsOutOfRange(mem_write_status)) {
         // TODO: Raise a bus error exception.
+        break;
       }
       return mem_write_status;
     }
@@ -190,13 +178,13 @@ absl::Status Cpu::Writeback() {
   switch (decoder_.GetWbSel()) {
    case decoder::WbSel::kNone:
    case decoder::WbSel::kAluOut:
-    RETURN_IF_ERROR(SetRegister(registers_, decoder_.GetRd().GetUnsigned(), alu_out_));
+    RETURN_IF_ERROR(SetRegister(registers_, decoder_.GetRd(), alu_out_));
     break;
    case decoder::WbSel::kMemOut:
-    RETURN_IF_ERROR(SetRegister(registers_, decoder_.GetRd().GetUnsigned(), mem_out_));
+    RETURN_IF_ERROR(SetRegister(registers_, decoder_.GetRd(), mem_out_));
     break;
    case decoder::WbSel::kPcPlus4:
-    RETURN_IF_ERROR(SetRegister(registers_, decoder_.GetRd().GetUnsigned(), logic::Wire(pc_.GetOut().GetUnsigned() + 4)));
+    RETURN_IF_ERROR(SetRegister(registers_, decoder_.GetRd(), pc_ + 4));
     break;
    default:
     return absl::InternalError("Invalid writeback");

@@ -31,36 +31,17 @@ constexpr uint32_t kHalfWordMask = 0xffff;
 
 }  // namespace constants
 
-class Wire final {
- public:
-  explicit Wire(uint32_t value) { value_.u32 = value; }
-  explicit Wire(int32_t value) { value_.i32 = value; }
-  Wire() { value_.u32 = 0; }
+absl::StatusOr<uint8_t> GetByte(uint32_t val, size_t at_index);
+absl::StatusOr<uint16_t> GetHalfWord(uint32_t val, size_t at_index);
 
-  inline void SetUnsigned(uint32_t value) { value_.u32 = value; }
-  inline void SetSigned(int32_t value) { value_.i32 = value; }
-  inline uint32_t GetUnsigned() const { return value_.u32; }
-  inline int32_t GetSigned() const { return value_.i32; }
-  absl::StatusOr<uint8_t> GetByte(size_t at_index) const;
-  absl::StatusOr<uint16_t> GetHalfWord(size_t at_index) const;
-
-  absl::StatusOr<Opcode> GetOpcode() const;
-  absl::StatusOr<uint32_t> GetFunc3() const;
-  absl::StatusOr<uint32_t> GetFunc7() const;
-  absl::StatusOr<uint32_t> GetFunc7Imm() const;
-  absl::StatusOr<uint32_t> GetRs1() const;
-  absl::StatusOr<uint32_t> GetRs2() const;
-  absl::StatusOr<uint32_t> GetRd() const;
-  absl::StatusOr<uint32_t> GetCsr() const;
-
-  friend std::ostream& operator<<(std::ostream& os, const Wire& dt);
-
- private:
-  union {
-    uint32_t u32;
-    int32_t i32;
-  } value_;
-};
+absl::StatusOr<Opcode> GetOpcode(uint32_t val);
+absl::StatusOr<uint32_t> GetFunc3(uint32_t val);
+absl::StatusOr<uint32_t> GetFunc7(uint32_t val);
+absl::StatusOr<uint32_t> GetFunc7Imm(uint32_t val);
+absl::StatusOr<uint32_t> GetRs1(uint32_t val);
+absl::StatusOr<uint32_t> GetRs2(uint32_t val);
+absl::StatusOr<uint32_t> GetRd(uint32_t val);
+absl::StatusOr<uint32_t> GetCsr(uint32_t val);
 
 }  // namespace riscv_emu::logic
 

@@ -2,7 +2,6 @@
 #define LIB_CPU_CPU_H
 
 #include <stdint.h>
-#include "lib/logic/register.h"
 #include "lib/logic/wire.h"
 #include "lib/alu/alu.h"
 #include "lib/memory/dram.h"
@@ -14,21 +13,21 @@ namespace riscv_emu {
 
 class Cpu final {
  private:
-  logic::Register clock_;
-  logic::Register pc_;
-  logic::Register instr_; 
+  uint32_t clock_;
+  uint32_t pc_ = 0x8000;
+  uint32_t instr_; 
   bool power_is_on_;
   Alu alu_;
   memory::Dram dmem_;
   memory::Dram imem_;
   decoder::InstrDecoder decoder_;
 
-  logic::Wire alu_out_;
-  logic::Wire mem_out_;
-  logic::Wire a_out_;
-  logic::Wire b_out_;
+  uint32_t alu_out_;
+  uint32_t mem_out_;
+  uint32_t a_out_;
+  uint32_t b_out_;
 
-  logic::Register registers_[32];
+  uint32_t registers_[32] { 0 };
 
   absl::Status Fetch();
   absl::Status Decode();

@@ -17,12 +17,3 @@ cc_library(
     
   ],
 )
-
-cc_library(
-  name = "register",
-  hdrs = ["register.h"],
-  visibility = ["//visibility:public"],
-  deps = [
-    ":wires",
-  ],
-)
