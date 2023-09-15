@@ -328,7 +328,6 @@ absl::Status InstrDecoder::DecodeETypeInstr() {
   mem_op_ = MemOp::kNone;
 
   ASSIGN_OR_RETURN(const uint32_t sel, logic::GetRs2(instr_));
-  LOG(INFO) << "FUNC7: " << sel;
   switch (sel) {
    case 0b1:  // ebreak
     e_sel_ = ESel::kEBreak;

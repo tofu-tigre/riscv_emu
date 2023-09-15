@@ -42,14 +42,6 @@ namespace riscv_emu {
 
   }  // namespace
 
-Cpu::Cpu() {
-  imem_.SetAccessType(memory::AccessType::kWord);
-  if (!imem_.Flash("/tmp/progs/foo.o").ok()) {
-    LOG(FATAL) << "Something happened";
-  }
-
-}
-
 absl::Status Cpu::Fetch() {
   switch (decoder_.GetPcSel()) {
    case decoder::PcSel::kPcPlus4:
@@ -63,7 +55,8 @@ absl::Status Cpu::Fetch() {
   }
 
   VLOG(1) << "PC: 0x" << std::hex << pc_;
-  absl::StatusOr<uint32_t> instr = imem_.Read(pc_);
+  bus_.SetDramAccessType(memory::AccessType::kWord);
+  absl::StatusOr<uint32_t> instr = bus_.Read(pc_);
   if (!instr.ok()) {
     if (absl::IsOutOfRange(instr.status())) {
     // TODO: Raise exception and loop PC to addr. 0x0.
@@ -133,11 +126,15 @@ absl::Status Cpu::Execute() {
   RETURN_IF_ERROR(decoder_.SetBranchComp(res));
 
   ASSIGN_OR_RETURN(alu_out_, alu_.DoOp(decoder_.GetAluSel(), a_out_, b_out_));
+  VLOG(3) << "A output: 0x" << std::hex << a_out_;
+  VLOG(3) << "B output: 0x" << std::hex << b_out_;
+  VLOG(3) << "Alu output: 0x" << std::hex << alu_out_;
+
   return absl::OkStatus();
 }
 
 absl::Status Cpu::Memory() {
-  dmem_.SetAccessType(decoder_.GetMemSel());
+  bus_.SetDramAccessType(decoder_.GetMemSel());
   ASSIGN_OR_RETURN(const uint32_t rs2_out, GetRegister(registers_, decoder_.GetRs2()));
   absl::StatusOr<uint32_t> mem_out;
   absl::Status mem_write_status;
@@ -145,7 +142,7 @@ absl::Status Cpu::Memory() {
    case decoder::MemOp::kNone:
     break;
    case decoder::MemOp::kRead:
-    mem_out = dmem_.Read(alu_out_);
+    mem_out = bus_.Read(alu_out_);
     if (!mem_out.ok()) {
       if (absl::IsOutOfRange(mem_out.status())) {
         // TODO: Raise a bus error exception.
@@ -156,7 +153,7 @@ absl::Status Cpu::Memory() {
     mem_out_ = *mem_out;
     break;
    case decoder::MemOp::kWrite:
-    mem_write_status = dmem_.Write(alu_out_, rs2_out);
+    mem_write_status = bus_.Write(alu_out_, rs2_out);
     if (!mem_write_status.ok()) {
       if (absl::IsOutOfRange(mem_write_status)) {
         // TODO: Raise a bus error exception.

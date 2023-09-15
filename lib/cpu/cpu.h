@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "lib/logic/wire.h"
 #include "lib/alu/alu.h"
-#include "lib/memory/dram.h"
+#include "lib/perfs/bus.h"
 #include "instr_decoder.h"
 #include "glog/logging.h"
 #include "absl/status/status.h"
@@ -14,12 +14,11 @@ namespace riscv_emu {
 class Cpu final {
  private:
   uint32_t clock_;
-  uint32_t pc_ = 0x8000;
+  uint32_t pc_ = 0x8000 - 0x4;
   uint32_t instr_; 
   bool power_is_on_;
   Alu alu_;
-  memory::Dram dmem_;
-  memory::Dram imem_;
+  perfs::bus::Bus bus_;
   decoder::InstrDecoder decoder_;
 
   uint32_t alu_out_;
@@ -36,7 +35,7 @@ class Cpu final {
   absl::Status Writeback();
 
  public:
-  Cpu();
+  Cpu() = default;
   absl::Status Boot();
 };
 

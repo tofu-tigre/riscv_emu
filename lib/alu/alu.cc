@@ -87,7 +87,7 @@ absl::StatusOr<uint32_t> Alu::DoOp(const AluOp op, const uint32_t val1, const ui
     output = Add(val1, val2, &hasOverflow);
     break;
     case AluOp::kAddAddr:
-    output = Add(val1, val2 ^ 0b1, &hasOverflow);
+    output = Add(val1, val2 & (~0b1U), &hasOverflow);
     break;
     case AluOp::kSub:
     output = Sub(val1, val2, &hasOverflow);

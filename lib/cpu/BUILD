@@ -9,6 +9,7 @@ cc_library(
     "//lib/alu:alu",
     ":instr_decoder",
     "//lib/memory:dram",
+    "//lib/perfs:bus",
     "@com_google_absl//absl/strings:strings",
     "@com_google_absl//absl/status:status",
     "@com_google_absl//absl/status:statusor",

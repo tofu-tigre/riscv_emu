@@ -12,7 +12,7 @@ namespace riscv_emu::memory {
   namespace constants {
     // Note that `kDramSize` must be word-aligned to prevent logic
     // from accessing non-existing memory (out of range).
-    constexpr size_t kDramSize = 1024 * 1000;  // 1000 KiB
+    constexpr uint32_t kDramSize = 1024 * 1000;  // 1000 KiB
     constexpr uint32_t kDramFetchMask = 0b11111;
 
   }  // namespace constants
@@ -36,7 +36,7 @@ class Dram final {
 
  private:
   std::unique_ptr<uint8_t[]> data_;
-  AccessType access_type_;
+  AccessType access_type_ = memory::AccessType::kWord;
 };
 
 }  // namespace riscv_emu::memory
